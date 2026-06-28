@@ -1,0 +1,1673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NayaHR — AI HRIS Prototype</title>
+<style>
+  :root {
+    --bg: #f5f5f7;
+    --bg-2: #ececef;
+    --panel: #ffffff;
+    --ink: #1d1d1f;
+    --ink-2: #3a3b40;
+    --muted: #6e6e73;
+    --line: #e6e6eb;
+    --line-2: #f0f0f3;
+    --brand: #0071e3;
+    --brand-strong: #0a84ff;
+    --brand-deep: #0059b8;
+    --brand-soft: #e8f1fd;
+    --brand-tint: #f4f8fe;
+    --green: #1d8f4e;
+    --green-soft: #e6f6ec;
+    --amber: #a96a0c;
+    --amber-soft: #fbf0db;
+    --red: #d23a36;
+    --red-soft: #fcecec;
+    --shadow-sm: 0 1px 2px rgba(20,28,52,.05);
+    --shadow: 0 1px 3px rgba(20,28,52,.05), 0 12px 28px -14px rgba(20,28,52,.18);
+    --shadow-lg: 0 28px 70px -24px rgba(20,28,52,.4);
+    --radius: 16px;
+    --radius-sm: 11px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg); color: var(--ink);
+    -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+    letter-spacing: -0.01em;
+  }
+  ::selection { background: rgba(0,113,227,.18); }
+  ::-webkit-scrollbar { width: 11px; height: 11px; }
+  ::-webkit-scrollbar-thumb { background: #cfcfd6; border-radius: 8px; border: 3px solid transparent; background-clip: content-box; }
+  ::-webkit-scrollbar-thumb:hover { background: #b6b6bf; background-clip: content-box; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  .app { display: grid; grid-template-columns: 244px 1fr; min-height: 100vh; }
+
+  /* Sidebar — light, Apple / Fiori shell */
+  .side { background: #fbfbfd; border-right: 1px solid var(--line); padding: 20px 14px; display: flex; flex-direction: column; gap: 3px; }
+  .logo { display: flex; align-items: center; gap: 11px; padding: 6px 10px 22px; }
+  .logo .mark { width: 34px; height: 34px; border-radius: 10px; background: linear-gradient(140deg,#0a84ff,#0057c2); display:flex; align-items:center; justify-content:center; font-weight:800; color:#fff; font-size:16px; box-shadow: 0 4px 12px rgba(0,90,200,.35); }
+  .logo .name { font-weight: 650; color: var(--ink); letter-spacing: -0.02em; font-size: 18px; }
+  .logo .tag { font-size: 10.5px; color: var(--muted); letter-spacing: .2px; margin-top: 1px; }
+  .nav { display:flex; flex-direction:column; gap:2px; margin-top: 4px; }
+  .nav button {
+    position: relative; text-align:left; background:transparent; border:0; color: var(--ink-2);
+    padding:10px 12px; border-radius:10px; font-size:14px; font-weight:500; cursor:pointer;
+    display:flex; align-items:center; gap:11px; width:100%;
+    transition: background .15s ease, color .15s ease;
+  }
+  .nav button:hover { background:#f0f0f4; color: var(--ink); }
+  .nav button.active { background: var(--brand-soft); color: var(--brand-deep); font-weight:600; }
+  .nav button.active::before { content:''; position:absolute; left:4px; top:50%; transform:translateY(-50%); width:3px; height:18px; border-radius:3px; background: var(--brand); }
+  .nav .ico { width:20px; height:20px; display:inline-flex; align-items:center; justify-content:center; opacity:.95; }
+  .nav .ico svg { width:19px; height:19px; stroke-linecap:round; stroke-linejoin:round; }
+  .side .foot { margin-top:auto; font-size:11px; color:#8a8a90; padding:14px 10px 4px; line-height:1.7; border-top:1px solid var(--line-2); }
+  .side .foot .dot { display:inline-block; width:7px; height:7px; border-radius:50%; background: var(--green); margin-right:6px; vertical-align:middle; }
+
+  /* Main */
+  .main { padding: 0; overflow-x:hidden; }
+  .topbar {
+    display:flex; align-items:center; justify-content:space-between; gap:16px;
+    padding: 18px 36px; background: rgba(255,255,255,.72);
+    -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px);
+    border-bottom:1px solid var(--line); position:sticky; top:0; z-index:5;
+  }
+  .topbar h1 { font-size:24px; margin:0; font-weight:650; letter-spacing:-0.025em; }
+  .topbar .sub { font-size:13.5px; color:var(--muted); margin-top:3px; letter-spacing:-0.01em; }
+  .btn {
+    background:var(--brand); color:#fff; border:0; padding:10px 18px; border-radius:980px;
+    font-size:13.5px; font-weight:600; cursor:pointer; letter-spacing:-0.01em;
+    box-shadow: var(--shadow-sm); transition: background .15s ease, transform .12s ease, box-shadow .15s ease;
+  }
+  .btn:hover { background:var(--brand-deep); transform: translateY(-1px); box-shadow: 0 6px 16px -6px rgba(0,90,200,.5); }
+  .btn:active { transform: translateY(0); }
+  .btn.ghost { background:var(--brand-soft); color:var(--brand-deep); box-shadow:none; }
+  .btn.ghost:hover { background:#d8e8fb; }
+  .btn.sm { padding:7px 13px; font-size:12.5px; }
+  .content { padding: 32px 36px 72px; }
+
+  /* KPI tiles (worklet / Fiori) */
+  .kpis { display:grid; grid-template-columns:repeat(4,1fr); gap:18px; margin-bottom:24px; }
+  .kpi {
+    background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+    padding:20px 22px; box-shadow:var(--shadow);
+    transition: transform .18s ease, box-shadow .18s ease;
+  }
+  .kpi:hover { transform: translateY(-2px); box-shadow: 0 1px 3px rgba(20,28,52,.05), 0 20px 40px -18px rgba(20,28,52,.28); }
+  .kpi .label { font-size:12px; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:.5px; }
+  .kpi .val { font-size:34px; font-weight:600; margin-top:10px; letter-spacing:-0.025em; line-height:1.05; font-variant-numeric: tabular-nums; }
+  .kpi .delta { font-size:12.5px; margin-top:9px; font-weight:500; display:inline-flex; align-items:center; gap:4px; }
+  .delta.up { color:var(--green); } .delta.down { color:var(--red); }
+
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+  .panel { background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden; }
+  .panel .hd { padding:17px 22px; border-bottom:1px solid var(--line-2); font-weight:650; font-size:15px; letter-spacing:-0.015em; display:flex; justify-content:space-between; align-items:center; }
+  .panel .bd { padding:20px 22px; }
+
+  table { width:100%; border-collapse:collapse; font-size:13.5px; }
+  th { text-align:left; color:var(--muted); font-weight:600; font-size:11px; text-transform:uppercase; letter-spacing:.5px; padding:13px 22px; border-bottom:1px solid var(--line); background:#fcfcfd; }
+  td { padding:14px 22px; border-bottom:1px solid var(--line-2); color:var(--ink); }
+  tr:last-child td { border-bottom:0; }
+  tr.clk { transition: background .12s ease; }
+  tr.clk:hover { background:var(--brand-tint); cursor:pointer; }
+  .avatar { width:32px; height:32px; border-radius:50%; background:var(--brand-soft); color:var(--brand-deep); display:inline-flex; align-items:center; justify-content:center; font-weight:700; font-size:12px; margin-right:10px; vertical-align:middle; }
+  .pill { display:inline-block; padding:4px 10px; border-radius:980px; font-size:11.5px; font-weight:600; letter-spacing:.005em; }
+  .pill.green { background:var(--green-soft); color:var(--green); }
+  .pill.amber { background:var(--amber-soft); color:var(--amber); }
+  .pill.red { background:var(--red-soft); color:var(--red); }
+  .pill.gray { background:#eeeef2; color:var(--muted); }
+
+  .bar-row { display:flex; align-items:center; gap:12px; margin:11px 0; font-size:13px; }
+  .bar-row .nm { width:130px; color:var(--ink-2); }
+  .bar-track { flex:1; background:#edeef2; height:9px; border-radius:980px; overflow:hidden; }
+  .bar-fill { height:100%; background:linear-gradient(90deg,var(--brand),var(--brand-strong)); border-radius:980px; transition: width .6s cubic-bezier(.2,.8,.2,1); }
+  .bar-row .vv { width:34px; text-align:right; font-weight:650; font-variant-numeric: tabular-nums; }
+
+  /* Inputs */
+  input, select { font:inherit; letter-spacing:-0.01em; padding:10px 13px; border:1px solid var(--line); border-radius:var(--radius-sm); width:100%; background:#fff; color:var(--ink); transition: border-color .15s ease, box-shadow .15s ease; }
+  input::placeholder { color:#a6a6ad; }
+  input:focus, select:focus { outline:none; border-color:var(--brand); box-shadow:0 0 0 3px rgba(0,113,227,.16); }
+  select { appearance:none; -webkit-appearance:none; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236e6e73' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>"); background-repeat:no-repeat; background-position: right 12px center; padding-right:34px; }
+  label.fld { display:block; font-size:12px; color:var(--muted); font-weight:600; margin:0 0 6px; }
+  .row { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px; }
+
+  /* Modal */
+  .scrim { position:fixed; inset:0; background:rgba(18,22,40,.5); -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px); display:none; align-items:center; justify-content:center; z-index:50; padding:20px; }
+  .scrim.on { display:flex; }
+  .modal { background:#fff; border-radius:20px; width:min(560px,100%); max-height:90vh; overflow:auto; box-shadow:var(--shadow-lg); animation: pop .22s cubic-bezier(.2,.8,.2,1); }
+  @keyframes pop { from { opacity:0; transform: translateY(12px) scale(.98); } to { opacity:1; transform:none; } }
+  .modal .hd { padding:20px 24px; border-bottom:1px solid var(--line-2); display:flex; justify-content:space-between; align-items:center; }
+  .modal .hd h3 { margin:0; font-size:18px; font-weight:650; letter-spacing:-0.02em; display:flex; align-items:center; }
+  .modal .bd { padding:22px 24px; }
+  .modal .ft { padding:18px 24px; border-top:1px solid var(--line-2); display:flex; justify-content:flex-end; gap:10px; }
+  .x { background:none; border:0; font-size:22px; color:var(--muted); cursor:pointer; line-height:1; width:32px; height:32px; border-radius:8px; transition: background .12s, color .12s; }
+  .x:hover { background:#f0f0f4; color:var(--ink); }
+
+  .timeline { border-left:2px solid var(--line); margin-left:7px; padding-left:18px; margin-top:8px; }
+  .tl-item { position:relative; margin-bottom:18px; }
+  .tl-item::before { content:''; position:absolute; left:-23px; top:3px; width:11px; height:11px; border-radius:50%; background:var(--brand); box-shadow:0 0 0 3px var(--brand-soft); }
+  .tl-item .dt { font-size:11.5px; color:var(--muted); font-weight:600; }
+  .tl-item .ev { font-size:13.5px; margin-top:3px; color:var(--ink); }
+
+  /* AI assistant */
+  .ai-fab { position:fixed; right:28px; bottom:28px; width:60px; height:60px; border-radius:50%; background:linear-gradient(140deg,#0a84ff,#0057c2); color:#fff; border:0; font-size:25px; cursor:pointer; box-shadow:0 12px 32px rgba(0,100,210,.45); z-index:40; transition: transform .18s ease, box-shadow .18s ease; }
+  .ai-fab:hover { transform: translateY(-2px) scale(1.04); box-shadow:0 18px 40px rgba(0,100,210,.5); }
+  .ai-panel { position:fixed; right:28px; bottom:100px; width:392px; max-width:calc(100vw - 40px); height:560px; max-height:calc(100vh - 140px); background:#fff; border:1px solid var(--line); border-radius:20px; box-shadow:var(--shadow-lg); display:none; flex-direction:column; z-index:41; overflow:hidden; }
+  .ai-panel.on { display:flex; animation: pop .2s cubic-bezier(.2,.8,.2,1); }
+  .ai-hd { background:linear-gradient(140deg,#0a84ff,#0057c2); color:#fff; padding:17px 20px; }
+  .ai-hd .t { font-weight:700; font-size:15px; display:flex; align-items:center; gap:8px; letter-spacing:-0.01em; }
+  .ai-hd .s { font-size:11.5px; opacity:.9; margin-top:4px; }
+  .ai-body { flex:1; overflow-y:auto; padding:18px; background:#f6f7f9; display:flex; flex-direction:column; gap:12px; }
+  .msg { max-width:86%; padding:11px 14px; border-radius:16px; font-size:13.5px; line-height:1.5; box-shadow:var(--shadow-sm); }
+  .msg.bot { background:#fff; border:1px solid var(--line); align-self:flex-start; border-bottom-left-radius:5px; }
+  .msg.me { background:var(--brand); color:#fff; align-self:flex-end; border-bottom-right-radius:5px; }
+  .msg code { background: rgba(0,0,0,.06); padding:1px 5px; border-radius:5px; font-size:12px; }
+  .msg.me code { background: rgba(255,255,255,.22); }
+  .cursor { display:inline-block; width:6px; color:var(--brand); animation:blink 1s steps(2) infinite; }
+  @keyframes blink { 50% { opacity:0; } }
+  .ai-foot { padding:12px; border-top:1px solid var(--line); display:flex; gap:8px; background:#fff; }
+  .ai-foot input { flex:1; }
+  .chips { display:flex; flex-wrap:wrap; gap:7px; padding:0 16px 14px; background:#f6f7f9; }
+  .chip { background:#fff; border:1px solid var(--line); color:var(--brand-deep); font-size:12px; padding:7px 12px; border-radius:980px; cursor:pointer; transition: background .12s, border-color .12s; }
+  .chip:hover { background:var(--brand-soft); border-color:transparent; }
+
+  .empty { text-align:center; color:var(--muted); padding:48px; font-size:14px; }
+  .hint { background:var(--brand-tint); border:1px solid rgba(0,113,227,.14); color:var(--brand-deep); font-size:13px; padding:12px 16px; border-radius:12px; margin-bottom:20px; line-height:1.5; }
+  .seg { display:inline-flex; background:#ececef; border-radius:12px; padding:3px; gap:2px; }
+  .seg button { border:0; background:transparent; padding:7px 15px; border-radius:9px; font-size:13px; cursor:pointer; color:var(--muted); font-weight:600; transition: background .12s, color .12s; }
+  .seg button.on { background:#fff; color:var(--ink); box-shadow:0 1px 3px rgba(0,0,0,.1); }
+
+  /* Recruitment */
+  .board { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:14px; align-items:start; }
+  .col { background:#fafafb; border:1px solid var(--line); border-radius:14px; padding:11px; min-width:0; }
+  .col .ch { display:flex; align-items:center; justify-content:space-between; font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--muted); padding:2px 4px 11px; }
+  .col .ch .dotc { display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:6px; vertical-align:middle; }
+  .col .ch .ct { background:#ececef; color:var(--ink-2); border-radius:980px; padding:1px 8px; font-size:11px; }
+  .cand { background:#fff; border:1px solid var(--line); border-radius:11px; padding:11px 12px; margin-bottom:9px; cursor:pointer; box-shadow:var(--shadow-sm); transition:transform .12s ease, box-shadow .15s ease; }
+  .cand:hover { transform:translateY(-1px); box-shadow:var(--shadow); }
+  .cand:last-child { margin-bottom:0; }
+  .cand .cn { font-weight:600; font-size:13.5px; }
+  .cand .cr { font-size:12px; color:var(--muted); margin-top:2px; }
+  .cand .cm { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:9px; }
+  .stars { color:#e0a912; font-size:12px; letter-spacing:1px; white-space:nowrap; }
+  .stepper { display:flex; flex-wrap:wrap; align-items:center; gap:6px; }
+  .step { font-size:11.5px; font-weight:600; color:var(--muted); background:#f0f0f4; padding:4px 10px; border-radius:980px; }
+  .step.on { background:var(--brand-soft); color:var(--brand-deep); }
+  .step-sep { color:#c4c4cc; font-size:12px; }
+
+  /* Performance — star rating control */
+  .rate { display:flex; gap:5px; }
+  .starbtn { background:none; border:0; width:auto; padding:0; font-size:26px; line-height:1; color:#d6d6dc; cursor:pointer; transition:color .1s, transform .1s; }
+  .starbtn:hover { transform:scale(1.14); }
+  .starbtn.on { color:#e0a912; }
+
+  /* Role / identity switcher */
+  .rolewrap { position:relative; }
+  .rolectl { display:flex; align-items:center; gap:9px; padding:5px 12px 5px 6px; border:1px solid var(--line); border-radius:980px; background:#fff; cursor:pointer; transition:background .12s, box-shadow .12s; }
+  .rolectl:hover { background:#f5f5f7; box-shadow:var(--shadow-sm); }
+  .rolectl .avatar { margin-right:0; width:30px; height:30px; }
+  .rolectl .rl { line-height:1.18; text-align:left; }
+  .rolectl .rn { font-size:13px; font-weight:600; }
+  .rolectl .rr { font-size:11px; color:var(--muted); }
+  .rolectl .cv { color:var(--muted); font-size:10px; }
+  .rolemenu { position:absolute; right:0; top:50px; width:272px; background:#fff; border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow-lg); padding:8px; display:none; z-index:60; }
+  .rolemenu.on { display:block; animation:pop .16s cubic-bezier(.2,.8,.2,1); }
+  .rolemenu .mlbl { font-size:10.5px; text-transform:uppercase; letter-spacing:.5px; color:var(--muted); font-weight:700; padding:8px 8px 5px; }
+  .roleopt { display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:10px; cursor:pointer; font-size:13.5px; color:var(--ink-2); }
+  .roleopt:hover { background:#f5f5f7; }
+  .roleopt.on { background:var(--brand-soft); color:var(--brand-deep); font-weight:600; }
+  .roleopt .ri { width:18px; height:18px; display:inline-flex; align-items:center; justify-content:center; color:var(--muted); }
+  .roleopt .ri svg { width:17px; height:17px; stroke-linecap:round; stroke-linejoin:round; }
+  .roleopt.on .ri { color:var(--brand); }
+  .rolemenu select { margin:4px 6px 6px; width:calc(100% - 12px); }
+
+  /* Compensation — range position bar */
+  .rangebar { background:#edeef2; height:8px; border-radius:980px; overflow:hidden; }
+  .rangefill { height:100%; background:linear-gradient(90deg,var(--brand),var(--brand-strong)); border-radius:980px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- Sidebar -->
+  <aside class="side">
+    <div class="logo">
+      <div class="mark">N</div>
+      <div>
+        <div class="name">NayaHR</div>
+        <div class="tag">AI-native HRIS</div>
+      </div>
+    </div>
+    <nav class="nav" id="nav">
+      <button data-view="dashboard" class="active"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="1.6"/><rect x="14" y="3" width="7" height="5" rx="1.6"/><rect x="14" y="12" width="7" height="9" rx="1.6"/><rect x="3" y="16" width="7" height="5" rx="1.6"/></svg></span> Dashboard</button>
+      <button data-view="people"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.4"/><path d="M3.4 19a5.6 5.6 0 0 1 11.2 0"/><path d="M16.2 5.3a3.4 3.4 0 0 1 0 6.4"/><path d="M17.6 13.4A5.6 5.6 0 0 1 21 18.6"/></svg></span> People (Core HR)</button>
+      <button data-view="recruit"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="7.5" width="18" height="12.5" rx="2"/><path d="M8.5 7.5V6a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v1.5"/><path d="M3 12.5h18"/></svg></span> Recruitment</button>
+      <button data-view="perform"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="9" r="5.2"/><path d="M8.6 13.4 7.2 20.5l4.8-2.7 4.8 2.7-1.4-7.1"/></svg></span> Performance</button>
+      <button data-view="time"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.4V12l3.2 1.9"/></svg></span> Time &amp; Leave</button>
+      <button data-view="reports"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3.5 20.5h17"/><rect x="5" y="11" width="3.4" height="7" rx="1"/><rect x="10.3" y="6" width="3.4" height="12" rx="1"/><rect x="15.6" y="9" width="3.4" height="9" rx="1"/></svg></span> Reporting</button>
+      <button data-view="onboard"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 15V4"/><path d="m8 8 4-4 4 4"/><path d="M5 14.5v3A1.5 1.5 0 0 0 6.5 19h11a1.5 1.5 0 0 0 1.5-1.5v-3"/></svg></span> Import / Onboard</button>
+    </nav>
+    <div class="foot">
+      <span class="dot"></span>Local data · in your browser<br/>
+      Prototype v0.1 · Core HR · Time · Reporting
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <h1 id="ttl">Dashboard</h1>
+        <div class="sub" id="sub">People analytics at a glance</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:14px">
+        <div id="roleSwitch"></div>
+        <div id="topAction"></div>
+      </div>
+    </div>
+    <div class="content" id="content"></div>
+  </main>
+</div>
+
+<!-- Employee modal -->
+<div class="scrim" id="scrim">
+  <div class="modal" id="modal"></div>
+</div>
+
+<!-- AI assistant -->
+<button class="ai-fab" id="aiFab" title="Ask NayaHR AI">✦</button>
+<div class="ai-panel" id="aiPanel">
+  <div class="ai-hd">
+    <div class="t">✦ NayaHR Assistant</div>
+    <div class="s">Ask about your people, leave, or reports — in plain English</div>
+  </div>
+  <div class="ai-body" id="aiBody"></div>
+  <div class="chips" id="aiChips"></div>
+  <div class="ai-foot">
+    <input id="aiInput" placeholder="e.g. attrition by department" />
+    <button class="btn sm" id="aiSend">Send</button>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   NayaHR prototype — vanilla JS, no dependencies.
+   Demonstrates: effective-dated Core HR, Time & Leave,
+   Reporting (incl. natural-language queries), AI assistant,
+   and CSV onboarding. Data persists to localStorage.
+   ============================================================ */
+
+const DEPTS = ["Engineering","Sales","Marketing","Operations","Finance","HR","Customer Success"];
+const LOCS = ["Bengaluru","Mumbai","Remote","Pune","Delhi"];
+const TITLES = {
+  Engineering:["Software Engineer","Senior Engineer","Engineering Manager","QA Analyst"],
+  Sales:["Account Executive","Sales Manager","SDR","Regional Head"],
+  Marketing:["Marketing Associate","Content Lead","Growth Manager"],
+  Operations:["Ops Associate","Ops Manager"],
+  Finance:["Accountant","Finance Manager","Payroll Specialist"],
+  HR:["HR Generalist","Recruiter","HR Manager"],
+  "Customer Success":["CSM","Support Lead","Onboarding Specialist"]
+};
+
+const FIRST = ["Aarav","Diya","Vihaan","Ananya","Arjun","Saanvi","Reyansh","Aadhya","Kabir","Ishaan","Myra","Vivaan","Anika","Aditya","Pari","Krishna","Riya","Dhruv","Sara","Aryan","Meera","Rohan","Tara","Karan","Neha","Sameer","Pooja","Nikhil","Sneha","Varun"];
+const LAST = ["Sharma","Patel","Reddy","Nair","Iyer","Gupta","Mehta","Verma","Singh","Rao","Joshi","Kapoor","Malhotra","Bose","Das","Khanna"];
+
+function uid(){ return 'e'+Math.random().toString(36).slice(2,9); }
+function pick(a){ return a[Math.floor(Math.random()*a.length)]; }
+function fmtDate(d){ return new Date(d).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}); }
+function daysAgo(n){ const d=new Date(); d.setDate(d.getDate()-n); return d.toISOString().slice(0,10); }
+function initials(n){ return n.split(' ').map(x=>x[0]).slice(0,2).join('').toUpperCase(); }
+function inr(n){ return '₹'+(n/100000).toFixed(1)+'L'; }
+
+/* ---------- Recruitment reference data + seed ---------- */
+const STAGES=['Applied','Screening','Interview','Offer','Hired'];
+const SOURCES=['LinkedIn','Referral','Naukri','Company site','Agency','Indeed'];
+function seedRecruit(emps){
+  const mgrs=(emps||[]).filter(e=>e.status==='Active' && emps.some(x=>x.manager===e.name));
+  const mgrName=()=> mgrs.length ? pick(mgrs).name : pick(FIRST)+' '+pick(LAST);
+  const reqs=[];
+  for(let i=0;i<7;i++){
+    const dept=pick(DEPTS);
+    reqs.push({ id:uid(), title:pick(TITLES[dept]), dept, location:pick(LOCS),
+      openings:1+Math.floor(Math.random()*3),
+      status:pick(['Open','Open','Open','On hold','Closed']),
+      hiringManager:mgrName(),
+      opened:daysAgo(10+Math.floor(Math.random()*120)) });
+  }
+  const openReqs=reqs.filter(r=>r.status!=='Closed');
+  const candidates=[];
+  for(let i=0;i<34;i++){
+    const r=pick(openReqs.length?openReqs:reqs);
+    const appliedAgo=12+Math.floor(Math.random()*90);
+    const stage=pick(['Applied','Applied','Screening','Screening','Interview','Interview','Offer','Hired','Rejected']);
+    const name=pick(FIRST)+' '+pick(LAST);
+    const hiredDate = stage==='Hired' ? daysAgo(Math.max(1,appliedAgo-(15+Math.floor(Math.random()*25)))) : null;
+    candidates.push({ id:uid(), name, reqId:r.id,
+      email:name.toLowerCase().replace(/ /g,'.')+'@email.com',
+      stage, source:pick(SOURCES), appliedDate:daysAgo(appliedAgo),
+      rating: stage==='Applied' ? null : 2+Math.floor(Math.random()*4), hiredDate });
+  }
+  return { reqs, candidates };
+}
+
+/* ---------- Talent & Performance reference data + seed ---------- */
+const GOAL_TITLES=['Ship Q2 roadmap feature','Improve onboarding NPS by 10pts','Close 12 enterprise deals','Reduce build cycle time 15%','Mentor two junior team members','Launch employee referral program','Cut cloud infra cost 10%','Publish 6 customer case studies','Roll out new CRM workflow','Hit 95% CSAT this quarter'];
+function seedPerform(emps){
+  const act=emps.filter(e=>e.status==='Active');
+  const reviews={};
+  act.forEach(e=>{
+    const self=pick(['Submitted','Submitted','Submitted','Not started']);
+    const mgr = self==='Not started' ? 'Not started' : pick(['Completed','Completed','Completed','In progress','Not started']);
+    reviews[e.id]={ self, mgr, rating: mgr==='Completed' ? pick([2,3,3,4,4,4,5,5]) : null };
+  });
+  const goals=[];
+  act.forEach(e=>{
+    if(Math.random()<0.55){
+      const n=1+Math.floor(Math.random()*2);
+      for(let i=0;i<n;i++){
+        const progress=Math.floor(Math.random()*101);
+        goals.push({ id:uid(), empId:e.id, title:pick(GOAL_TITLES),
+          progress, status: progress>=100 ? 'Done' : (Math.random()<0.22 ? 'At risk' : 'On track') });
+      }
+    }
+  });
+  const due=new Date(); due.setDate(due.getDate()+24);
+  return { cycle:{ name:'H1 2026 Performance Review', due:due.toISOString().slice(0,10) }, reviews, goals };
+}
+
+/* ---------- Seed data with effective-dated history ---------- */
+function seed(){
+  const today = new Date();
+  const emps = [];
+  for(let i=0;i<48;i++){
+    const dept = pick(DEPTS);
+    const name = pick(FIRST)+' '+pick(LAST);
+    const hireDays = 30 + Math.floor(Math.random()*1500);
+    const hire = daysAgo(hireDays);
+    const baseSal = 400000 + Math.floor(Math.random()*40)*50000;
+    const active = Math.random() > 0.13;
+    const termDays = active ? null : Math.floor(Math.random()*hireDays*0.6);
+    // effective-dated history: hire -> promotions/raises -> (term)
+    const history = [{ date: hire, type:'Hire', detail:`Hired as ${pick(TITLES[dept])} · ${dept}`, sal: baseSal }];
+    if(hireDays > 400 && Math.random()>0.4){
+      history.push({ date: daysAgo(hireDays-365), type:'Comp change', detail:'Annual increment +8%', sal: Math.round(baseSal*1.08) });
+    }
+    if(hireDays > 700 && Math.random()>0.6){
+      history.push({ date: daysAgo(hireDays-700), type:'Promotion', detail:'Promoted one level', sal: Math.round(baseSal*1.22) });
+    }
+    if(!active){ history.push({ date: daysAgo(termDays), type:'Termination', detail: pick(['Resignation','Better opportunity','Relocation','Performance']), sal: null }); }
+    const curSal = [...history].reverse().find(h=>h.sal)?.sal || baseSal;
+    emps.push({
+      id: uid(), name, dept,
+      title: history[0].detail.split('as ')[1].split(' · ')[0],
+      email: name.toLowerCase().replace(' ','.')+'@company.com',
+      location: pick(LOCS),
+      hire, status: active?'Active':'Terminated',
+      termDate: active?null:daysAgo(termDays),
+      salary: curSal,
+      manager: null,
+      history: history.sort((a,b)=>a.date<b.date?-1:1)
+    });
+  }
+  // assign managers within dept
+  DEPTS.forEach(d=>{
+    const inDept = emps.filter(e=>e.dept===d && e.status==='Active');
+    const mgr = inDept.find(e=>/Manager|Head|Lead/.test(e.title)) || inDept[0];
+    inDept.forEach(e=>{ if(e!==mgr) e.manager = mgr?.name; });
+  });
+  // leave requests
+  const leaves=[];
+  emps.filter(e=>e.status==='Active').slice(0,16).forEach(e=>{
+    leaves.push({
+      id:uid(), emp:e.name, dept:e.dept,
+      type: pick(['Annual','Sick','Casual','Work from home']),
+      from: daysAgo(Math.floor(Math.random()*20)-10),
+      days: 1+Math.floor(Math.random()*4),
+      status: pick(['Pending','Approved','Approved','Pending'])
+    });
+  });
+  const rec=seedRecruit(emps);
+  return { emps, leaves, reqs:rec.reqs, candidates:rec.candidates, perf:seedPerform(emps), version:3 };
+}
+
+/* ---------- State / persistence ---------- */
+let DB;
+function load(){
+  try{ DB = JSON.parse(localStorage.getItem('nayahr')); }catch(e){ DB=null; }
+  if(!DB || !DB.emps){ DB = seed(); save(); return; }
+  if(!DB.reqs || !DB.candidates){ const rec=seedRecruit(DB.emps); DB.reqs=rec.reqs; DB.candidates=rec.candidates; DB.version=2; save(); }
+  if(!DB.perf){ DB.perf=seedPerform(DB.emps); DB.version=3; save(); }
+}
+function save(){ localStorage.setItem('nayahr', JSON.stringify(DB)); }
+function resetData(){
+  if(!confirm('Reset all demo data? This regenerates employees, recruitment, performance, and compensation.')) return;
+  DB = seed(); save();
+  ROLE='admin'; ME=null; VIEW='dashboard';
+  renderNav(); renderRoleSwitch(); initAIChips(); render();
+}
+
+/* ---------- Derived metrics ---------- */
+function active(){ return DB.emps.filter(e=>e.status==='Active'); }
+function headcount(){ return active().length; }
+function byDept(){ const m={}; active().forEach(e=>m[e.dept]=(m[e.dept]||0)+1); return m; }
+function attrition12m(){
+  const cutoff = daysAgo(365);
+  const leavers = DB.emps.filter(e=>e.termDate && e.termDate>=cutoff).length;
+  const avg = (headcount()+leavers);
+  return avg? ((leavers/avg)*100) : 0;
+}
+function avgTenureYears(){
+  const a=active(); if(!a.length) return 0;
+  const now=Date.now();
+  const yrs = a.reduce((s,e)=>s+(now-new Date(e.hire))/3.156e10,0)/a.length;
+  return yrs;
+}
+function newHires90d(){ return DB.emps.filter(e=>e.hire>=daysAgo(90)).length; }
+function pendingLeaves(){ return DB.leaves.filter(l=>l.status==='Pending').length; }
+
+/* ============================================================
+   Views
+   ============================================================ */
+let VIEW='dashboard';
+let ROLE='admin';   // admin | manager | employee
+let ME=null;        // current identity (employee id) for manager/employee personas
+const content = document.getElementById('content');
+
+function setHeader(t,s,action=''){
+  document.getElementById('ttl').textContent=t;
+  document.getElementById('sub').textContent=s;
+  document.getElementById('topAction').innerHTML=action;
+}
+
+function render(){
+  document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('active', b.dataset.view===VIEW));
+  ({dashboard:vDashboard, people:vPeople, recruit:vRecruit, perform:vPerform, comp:vComp, time:vTime, reports:vReports, onboard:vOnboard,
+    ehome:vEHome, eprofile:vEProfile, etime:vETime, eperf:vEPerf, edir:vEDir,
+    mhome:vMHome, mteam:vMTeam, mappr:vMAppr, mperf:vMPerf, mcomp:vMComp, mhire:vMHire}[VIEW]||vDashboard)();
+}
+
+/* ---- Dashboard ---- */
+function vDashboard(){
+  setHeader('Dashboard','People analytics at a glance');
+  const bd=byDept();
+  const max=Math.max(...Object.values(bd),1);
+  const bars=DEPTS.filter(d=>bd[d]).sort((a,b)=>bd[b]-bd[a]).map(d=>`
+    <div class="bar-row"><div class="nm">${d}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${bd[d]/max*100}%"></div></div>
+      <div class="vv">${bd[d]}</div></div>`).join('');
+  const recent=[...DB.emps].filter(e=>e.hire).sort((a,b)=>b.hire<a.hire?-1:1).slice(0,6);
+  content.innerHTML=`
+    <div class="hint">✦ <b>Tip:</b> Click the ✦ button (bottom-right) and ask "how many people in Engineering?" or "show attrition" — the assistant reads live data.</div>
+    <div class="kpis">
+      <div class="kpi"><div class="label">Headcount</div><div class="val">${headcount()}</div><div class="delta up">▲ ${newHires90d()} new in 90 days</div></div>
+      <div class="kpi"><div class="label">Attrition (12m)</div><div class="val">${attrition12m().toFixed(1)}%</div><div class="delta ${attrition12m()>15?'down':'up'}">${attrition12m()>15?'Above':'Within'} target</div></div>
+      <div class="kpi"><div class="label">Avg tenure</div><div class="val">${avgTenureYears().toFixed(1)}y</div><div class="delta up">Stable</div></div>
+      <div class="kpi"><div class="label">Pending leave</div><div class="val">${pendingLeaves()}</div><div class="delta ${pendingLeaves()?'down':'up'}">${pendingLeaves()?'Needs action':'All clear'}</div></div>
+    </div>
+    <div class="grid2">
+      <div class="panel"><div class="hd">Headcount by department</div><div class="bd">${bars}</div></div>
+      <div class="panel"><div class="hd">Recent joiners</div><div class="bd" style="padding:0">
+        <table><tbody>${recent.map(e=>`<tr><td><span class="avatar">${initials(e.name)}</span>${e.name}</td>
+          <td><span class="pill gray">${e.dept}</span></td><td style="color:var(--muted)">${fmtDate(e.hire)}</td></tr>`).join('')}</tbody></table>
+      </div></div>
+    </div>`;
+}
+
+/* ---- People / Core HR ---- */
+let pFilter='';
+function vPeople(){
+  setHeader('People','Core HR — system of record with effective-dated history',
+    `<button class="btn" onclick="openEmp()">+ Add employee</button>`);
+  const list=DB.emps.filter(e=>{
+    const q=pFilter.toLowerCase();
+    return !q || e.name.toLowerCase().includes(q)||e.dept.toLowerCase().includes(q)||e.title.toLowerCase().includes(q)||e.location.toLowerCase().includes(q);
+  });
+  content.innerHTML=`
+    <div style="display:flex;gap:12px;margin-bottom:16px;align-items:center">
+      <input id="search" placeholder="Search name, department, title, location…" value="${pFilter}" style="max-width:380px"/>
+      <span style="color:var(--muted);font-size:13px">${list.length} employees</span>
+    </div>
+    <div class="panel"><div class="bd" style="padding:0">
+      <table><thead><tr><th>Name</th><th>Title</th><th>Department</th><th>Location</th><th>Status</th><th>Tenure</th></tr></thead>
+      <tbody>${list.map(e=>`
+        <tr class="clk" onclick="openEmp('${e.id}')">
+          <td><span class="avatar">${initials(e.name)}</span>${e.name}<div style="font-size:11.5px;color:var(--muted);margin-left:39px">${e.email}</div></td>
+          <td>${e.title}</td><td><span class="pill gray">${e.dept}</span></td><td>${e.location}</td>
+          <td><span class="pill ${e.status==='Active'?'green':'red'}">${e.status}</span></td>
+          <td style="color:var(--muted)">${((Date.now()-new Date(e.hire))/3.156e10).toFixed(1)}y</td>
+        </tr>`).join('')||'<tr><td colspan=6 class="empty">No matches</td></tr>'}</tbody></table>
+    </div></div>`;
+  document.getElementById('search').oninput=e=>{ pFilter=e.target.value; const c=e.target.selectionStart; vPeople(); const s=document.getElementById('search'); s.focus(); s.setSelectionRange(c,c); };
+}
+
+function openEmp(id){
+  const e = id ? DB.emps.find(x=>x.id===id) : null;
+  const m=document.getElementById('modal');
+  if(e){
+    m.innerHTML=`
+      <div class="hd"><h3><span class="avatar">${initials(e.name)}</span>${e.name}</h3><button class="x" onclick="closeModal()">×</button></div>
+      <div class="bd">
+        <div class="row"><div><label class="fld">Title</label><input value="${e.title}" id="f_title"></div>
+          <div><label class="fld">Department</label><select id="f_dept">${DEPTS.map(d=>`<option ${d===e.dept?'selected':''}>${d}</option>`).join('')}</select></div></div>
+        <div class="row"><div><label class="fld">Location</label><select id="f_loc">${LOCS.map(d=>`<option ${d===e.location?'selected':''}>${d}</option>`).join('')}</select></div>
+          <div><label class="fld">Status</label><select id="f_status"><option ${e.status==='Active'?'selected':''}>Active</option><option ${e.status!=='Active'?'selected':''}>Terminated</option></select></div></div>
+        <div class="row"><div><label class="fld">Manager</label><input value="${e.manager||''}" id="f_mgr"></div>
+          <div><label class="fld">Annual salary (₹)</label><input value="${e.salary}" id="f_sal"></div></div>
+        <div style="margin-top:8px"><label class="fld">Effective-dated history</label>
+          <div class="timeline">${e.history.map(h=>`<div class="tl-item"><div class="dt">${fmtDate(h.date)} · ${h.type}</div><div class="ev">${h.detail}${h.sal?` — ${inr(h.sal)}/yr`:''}</div></div>`).join('')}</div>
+        </div>
+      </div>
+      <div class="ft"><button class="btn ghost sm" onclick="delEmp('${e.id}')">Delete</button><button class="btn" onclick="saveEmp('${e.id}')">Save changes</button></div>`;
+  } else {
+    m.innerHTML=`
+      <div class="hd"><h3>Add employee</h3><button class="x" onclick="closeModal()">×</button></div>
+      <div class="bd">
+        <div class="row"><div><label class="fld">Full name</label><input id="f_name" placeholder="e.g. Priya Sharma"></div>
+          <div><label class="fld">Title</label><input id="f_title" placeholder="e.g. Software Engineer"></div></div>
+        <div class="row"><div><label class="fld">Department</label><select id="f_dept">${DEPTS.map(d=>`<option>${d}</option>`).join('')}</select></div>
+          <div><label class="fld">Location</label><select id="f_loc">${LOCS.map(d=>`<option>${d}</option>`).join('')}</select></div></div>
+        <div class="row"><div><label class="fld">Hire date</label><input type="date" id="f_hire" value="${daysAgo(0)}"></div>
+          <div><label class="fld">Annual salary (₹)</label><input id="f_sal" value="600000"></div></div>
+        <p style="font-size:12.5px;color:var(--muted)">A "Hire" event will be recorded on the effective-dated timeline automatically.</p>
+      </div>
+      <div class="ft"><button class="btn ghost sm" onclick="closeModal()">Cancel</button><button class="btn" onclick="addEmp()">Add employee</button></div>`;
+  }
+  document.getElementById('scrim').classList.add('on');
+}
+function closeModal(){ document.getElementById('scrim').classList.remove('on'); }
+function saveEmp(id){
+  const e=DB.emps.find(x=>x.id===id);
+  const g=i=>document.getElementById(i).value;
+  const newSal=parseInt(g('f_sal'))||e.salary;
+  if(newSal!==e.salary){ e.history.push({date:daysAgo(0),type:'Comp change',detail:'Salary updated',sal:newSal}); }
+  if(g('f_status')!==e.status && g('f_status')==='Terminated'){ e.termDate=daysAgo(0); e.history.push({date:daysAgo(0),type:'Termination',detail:'Status changed'}); }
+  Object.assign(e,{title:g('f_title'),dept:g('f_dept'),location:g('f_loc'),status:g('f_status'),manager:g('f_mgr'),salary:newSal});
+  save(); closeModal(); render();
+}
+function addEmp(){
+  const g=i=>document.getElementById(i).value;
+  if(!g('f_name')){ alert('Name required'); return; }
+  const sal=parseInt(g('f_sal'))||600000;
+  DB.emps.push({ id:uid(), name:g('f_name'), title:g('f_title')||'Employee', dept:g('f_dept'),
+    email:g('f_name').toLowerCase().replace(/ /g,'.')+'@company.com', location:g('f_loc'),
+    hire:g('f_hire'), status:'Active', termDate:null, salary:sal, manager:null,
+    history:[{date:g('f_hire'),type:'Hire',detail:`Hired as ${g('f_title')||'Employee'} · ${g('f_dept')}`,sal}] });
+  save(); closeModal(); render();
+}
+function delEmp(id){ if(confirm('Delete this employee?')){ DB.emps=DB.emps.filter(x=>x.id!==id); save(); closeModal(); render(); } }
+
+/* ---- Time & Leave ---- */
+function vTime(){
+  setHeader('Time & Leave','Leave requests and approvals');
+  const rows=DB.leaves.map(l=>`
+    <tr><td><span class="avatar">${initials(l.emp)}</span>${l.emp}</td>
+    <td><span class="pill gray">${l.dept}</span></td><td>${l.type}</td>
+    <td>${fmtDate(l.from)}</td><td>${l.days}</td>
+    <td><span class="pill ${l.status==='Approved'?'green':l.status==='Pending'?'amber':'red'}">${l.status}</span></td>
+    <td>${l.status==='Pending'?`<button class="btn sm" onclick="actLeave('${l.id}','Approved')">Approve</button> <button class="btn ghost sm" onclick="actLeave('${l.id}','Rejected')">Reject</button>`:'—'}</td>
+    </tr>`).join('');
+  content.innerHTML=`
+    <div class="kpis" style="grid-template-columns:repeat(3,1fr)">
+      <div class="kpi"><div class="label">Pending</div><div class="val">${DB.leaves.filter(l=>l.status==='Pending').length}</div></div>
+      <div class="kpi"><div class="label">Approved this period</div><div class="val">${DB.leaves.filter(l=>l.status==='Approved').length}</div></div>
+      <div class="kpi"><div class="label">Total days requested</div><div class="val">${DB.leaves.reduce((s,l)=>s+l.days,0)}</div></div>
+    </div>
+    <div class="panel"><div class="hd">Leave requests</div><div class="bd" style="padding:0">
+      <table><thead><tr><th>Employee</th><th>Dept</th><th>Type</th><th>From</th><th>Days</th><th>Status</th><th>Action</th></tr></thead><tbody>${rows}</tbody></table>
+    </div></div>`;
+}
+function actLeave(id,st){ const l=DB.leaves.find(x=>x.id===id); l.status=st; save(); render(); }
+
+/* ---- Recruitment (ATS) ---- */
+function reqById(id){ return DB.reqs.find(r=>r.id===id); }
+function pipelineCands(){ return DB.candidates.filter(c=>c.stage!=='Hired'&&c.stage!=='Rejected'); }
+function candDays(c){ return Math.max(0,Math.round((Date.now()-new Date(c.appliedDate))/86400000)); }
+function starStr(n){ return n?'★'.repeat(n)+'☆'.repeat(5-n):''; }
+function avgTimeToHire(){
+  const h=DB.candidates.filter(c=>c.stage==='Hired'&&c.hiredDate);
+  if(!h.length) return 0;
+  return Math.round(h.reduce((s,c)=>s+(new Date(c.hiredDate)-new Date(c.appliedDate))/86400000,0)/h.length);
+}
+const STAGE_COLOR={Applied:'#8a8f9c',Screening:'#0071e3',Interview:'#a96a0c',Offer:'#7c3aed',Hired:'#1d8f4e'};
+
+function vRecruit(){
+  setHeader('Recruitment','Applicant tracking — requisitions and candidate pipeline',
+    `<button class="btn" onclick="openReq()">+ New requisition</button>`);
+  const openReqs=DB.reqs.filter(r=>r.status==='Open');
+  const openPos=openReqs.reduce((s,r)=>s+r.openings,0);
+  const offers=DB.candidates.filter(c=>c.stage==='Offer').length;
+  const cols=STAGES.map(st=>{
+    const list=DB.candidates.filter(c=>c.stage===st);
+    return `<div class="col"><div class="ch"><span><span class="dotc" style="background:${STAGE_COLOR[st]}"></span>${st}</span><span class="ct">${list.length}</span></div>
+      ${list.map(c=>{const r=reqById(c.reqId);return `<div class="cand" onclick="openCand('${c.id}')">
+        <div class="cn">${c.name}</div>
+        <div class="cr">${r?r.title:'—'}</div>
+        <div class="cm"><span class="pill gray">${r?r.dept:''}</span>${c.rating?`<span class="stars">${starStr(c.rating)}</span>`:'<span style="color:var(--muted);font-size:12px">unrated</span>'}</div>
+      </div>`;}).join('')||'<div style="font-size:12px;color:var(--muted);padding:6px 4px">No candidates</div>'}
+    </div>`;
+  }).join('');
+  const rows=DB.reqs.map(r=>{
+    const cc=DB.candidates.filter(c=>c.reqId===r.id&&c.stage!=='Rejected').length;
+    return `<tr><td><span style="font-weight:600">${r.title}</span><div style="font-size:11.5px;color:var(--muted)">Opened ${fmtDate(r.opened)} · ${r.hiringManager}</div></td>
+      <td><span class="pill gray">${r.dept}</span></td><td>${r.location}</td>
+      <td>${r.openings}</td><td>${cc}</td>
+      <td><span class="pill ${r.status==='Open'?'green':r.status==='On hold'?'amber':'gray'}">${r.status}</span></td></tr>`;
+  }).join('');
+  content.innerHTML=`
+    <div class="kpis">
+      <div class="kpi"><div class="label">Open requisitions</div><div class="val">${openReqs.length}</div><div class="delta up">${openPos} open positions</div></div>
+      <div class="kpi"><div class="label">In pipeline</div><div class="val">${pipelineCands().length}</div><div class="delta up">across all stages</div></div>
+      <div class="kpi"><div class="label">Offers out</div><div class="val">${offers}</div><div class="delta ${offers?'up':''}">${offers?'awaiting response':'none active'}</div></div>
+      <div class="kpi"><div class="label">Avg time-to-hire</div><div class="val">${avgTimeToHire()}d</div><div class="delta up">applied → hired</div></div>
+    </div>
+    <div class="panel" style="margin-bottom:20px"><div class="hd">Candidate pipeline <span style="font-weight:500;color:var(--muted);font-size:12.5px">Click a candidate to advance them</span></div>
+      <div class="bd"><div class="board">${cols}</div></div></div>
+    <div class="panel"><div class="hd">Requisitions</div><div class="bd" style="padding:0">
+      <table><thead><tr><th>Role</th><th>Dept</th><th>Location</th><th>Openings</th><th>Candidates</th><th>Status</th></tr></thead>
+      <tbody>${rows||'<tr><td colspan=6 class="empty">No requisitions</td></tr>'}</tbody></table>
+    </div></div>`;
+}
+
+function openCand(id){
+  const c=DB.candidates.find(x=>x.id===id); const r=reqById(c.reqId);
+  const idx=STAGES.indexOf(c.stage);
+  const stepper = c.stage==='Rejected'
+    ? '<span class="step" style="background:var(--red-soft);color:var(--red)">Rejected</span>'
+    : STAGES.map((s,i)=>`<span class="step ${i<=idx?'on':''}">${s}</span>`).join('<span class="step-sep">›</span>');
+  const m=document.getElementById('modal');
+  m.innerHTML=`
+    <div class="hd"><h3><span class="avatar">${initials(c.name)}</span>${c.name}</h3><button class="x" onclick="closeModal()">×</button></div>
+    <div class="bd">
+      <div class="row"><div><label class="fld">Applying for</label><div style="font-weight:600">${r?r.title:'—'}</div><div style="font-size:12px;color:var(--muted)">${r?r.dept+' · '+r.location:''}</div></div>
+        <div><label class="fld">Source · Applied</label><div>${c.source}</div><div style="font-size:12px;color:var(--muted)">${fmtDate(c.appliedDate)} · ${candDays(c)} days ago</div></div></div>
+      <div style="margin:8px 0 2px"><label class="fld">Stage</label><div class="stepper">${stepper}</div></div>
+      <div style="margin-top:16px"><label class="fld">Rating</label><div>${c.rating?`<span class="stars" style="font-size:16px">${starStr(c.rating)}</span>`:'<span style="color:var(--muted);font-size:13px">Not yet rated</span>'}</div></div>
+      <div style="font-size:12.5px;color:var(--muted);margin-top:16px">${c.email}</div>
+    </div>
+    <div class="ft">
+      ${c.stage!=='Rejected'?`<button class="btn ghost sm" onclick="setCand('${c.id}','Rejected')">Reject</button>`:''}
+      ${idx>0&&c.stage!=='Rejected'?`<button class="btn ghost sm" onclick="moveCand('${c.id}',-1)">‹ Back</button>`:''}
+      ${c.stage==='Offer'?`<button class="btn" onclick="hireCand('${c.id}')">Hire → add to Core HR</button>`
+        : c.stage==='Hired'?`<span class="pill green" style="align-self:center;padding:6px 12px">Hired ✓</span>`
+        : c.stage==='Rejected'?`<button class="btn ghost sm" onclick="setCand('${c.id}','Applied')">Reopen</button>`
+        : `<button class="btn" onclick="moveCand('${c.id}',1)">Advance ›</button>`}
+    </div>`;
+  document.getElementById('scrim').classList.add('on');
+}
+function moveCand(id,dir){
+  const c=DB.candidates.find(x=>x.id===id);
+  let i=Math.max(0,Math.min(STAGES.length-1,STAGES.indexOf(c.stage)+dir));
+  c.stage=STAGES[i];
+  if(c.rating==null && c.stage!=='Applied') c.rating=3;
+  if(c.stage==='Hired' && !c.hiredDate) c.hiredDate=daysAgo(0);
+  save(); openCand(id); render();
+}
+function setCand(id,stage){
+  const c=DB.candidates.find(x=>x.id===id);
+  c.stage=stage;
+  if(stage==='Hired' && !c.hiredDate) c.hiredDate=daysAgo(0);
+  save(); openCand(id); render();
+}
+function hireCand(id){
+  const c=DB.candidates.find(x=>x.id===id); const r=reqById(c.reqId);
+  const dept=r?r.dept:pick(DEPTS), title=r?r.title:'Employee', loc=r?r.location:pick(LOCS);
+  DB.emps.push({ id:uid(), name:c.name, title, dept,
+    email:c.name.toLowerCase().replace(/ /g,'.')+'@company.com', location:loc,
+    hire:daysAgo(0), status:'Active', termDate:null, salary:600000, manager:r?r.hiringManager:null,
+    history:[{date:daysAgo(0),type:'Hire',detail:`Hired as ${title} · ${dept} (via Recruitment)`,sal:600000}] });
+  c.stage='Hired'; c.hiredDate=daysAgo(0);
+  save(); closeModal(); VIEW='people'; render();
+  alert(`${c.name} has been hired and added to Core HR.`);
+}
+function openReq(){
+  const m=document.getElementById('modal');
+  m.innerHTML=`
+    <div class="hd"><h3>New requisition</h3><button class="x" onclick="closeModal()">×</button></div>
+    <div class="bd">
+      <div class="row"><div><label class="fld">Role title</label><input id="r_title" placeholder="e.g. Senior Engineer"></div>
+        <div><label class="fld">Department</label><select id="r_dept">${DEPTS.map(d=>`<option>${d}</option>`).join('')}</select></div></div>
+      <div class="row"><div><label class="fld">Location</label><select id="r_loc">${LOCS.map(d=>`<option>${d}</option>`).join('')}</select></div>
+        <div><label class="fld">Openings</label><input id="r_open" type="number" value="1" min="1"></div></div>
+      <div class="row"><div><label class="fld">Hiring manager</label><input id="r_mgr" placeholder="e.g. Priya Sharma"></div>
+        <div><label class="fld">Status</label><select id="r_status"><option>Open</option><option>On hold</option></select></div></div>
+    </div>
+    <div class="ft"><button class="btn ghost sm" onclick="closeModal()">Cancel</button><button class="btn" onclick="addReq()">Create requisition</button></div>`;
+  document.getElementById('scrim').classList.add('on');
+}
+function addReq(){
+  const g=i=>document.getElementById(i).value;
+  if(!g('r_title')){ alert('Role title required'); return; }
+  DB.reqs.unshift({ id:uid(), title:g('r_title'), dept:g('r_dept'), location:g('r_loc'),
+    openings:parseInt(g('r_open'))||1, status:g('r_status'), hiringManager:g('r_mgr')||'—', opened:daysAgo(0) });
+  save(); closeModal(); render();
+}
+
+/* ---- Talent & Performance ---- */
+function reviewFor(id){ return (DB.perf.reviews && DB.perf.reviews[id]) || {self:'Not started',mgr:'Not started',rating:null}; }
+function ensureReview(id){ if(!DB.perf.reviews) DB.perf.reviews={}; if(!DB.perf.reviews[id]) DB.perf.reviews[id]={self:'Not started',mgr:'Not started',rating:null}; }
+function perfSummary(){
+  const act=active();
+  let done=0, selfIn=0, rSum=0, rN=0; const dist={1:0,2:0,3:0,4:0,5:0};
+  act.forEach(e=>{ const r=reviewFor(e.id);
+    if(r.mgr==='Completed') done++;
+    if(r.self==='Submitted') selfIn++;
+    if(r.rating){ rSum+=r.rating; rN++; dist[r.rating]++; } });
+  const goals=DB.perf.goals||[];
+  return { total:act.length, done, selfIn, completionPct: act.length?Math.round(done/act.length*100):0,
+    avgRating: rN?+(rSum/rN).toFixed(1):0, dist,
+    goalsOnTrack:goals.filter(g=>g.status==='On track').length,
+    goalsAtRisk:goals.filter(g=>g.status==='At risk').length,
+    goalsDone:goals.filter(g=>g.status==='Done').length };
+}
+function vPerform(){
+  setHeader('Talent & Performance','Review cycle, goals, and ratings');
+  const s=perfSummary(); const cyc=DB.perf.cycle;
+  const mx=Math.max(...Object.values(s.dist),1);
+  const distBars=[5,4,3,2,1].map(n=>`
+    <div class="bar-row"><div class="nm" style="width:64px"><span class="stars">${'★'.repeat(n)}</span><span style="color:#d6d6dc">${'★'.repeat(5-n)}</span></div>
+      <div class="bar-track"><div class="bar-fill" style="width:${s.dist[n]/mx*100}%"></div></div><div class="vv">${s.dist[n]}</div></div>`).join('');
+  const goals=(DB.perf.goals||[]).slice().sort((a,b)=>b.progress-a.progress);
+  const goalRows=goals.map(g=>{ const e=DB.emps.find(x=>x.id===g.empId);
+    const col=g.status==='Done'?'var(--green)':g.status==='At risk'?'var(--red)':'var(--brand)';
+    return `<div style="margin-bottom:14px"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:6px">
+      <div style="font-size:13px"><span style="font-weight:600">${g.title}</span> <span style="color:var(--muted)">· ${e?e.name:'—'}</span></div>
+      <span class="pill ${g.status==='Done'?'green':g.status==='At risk'?'red':'gray'}">${g.status}</span></div>
+      <div class="bar-track"><div class="bar-fill" style="width:${g.progress}%;background:${col}"></div></div></div>`;
+  }).join('')||'<div class="empty">No goals yet</div>';
+  const rows=active().map(e=>{ const r=reviewFor(e.id);
+    return `<tr class="clk" onclick="openReview('${e.id}')">
+      <td><span class="avatar">${initials(e.name)}</span>${e.name}</td>
+      <td><span class="pill gray">${e.dept}</span></td>
+      <td><span class="pill ${r.self==='Submitted'?'green':'gray'}">${r.self}</span></td>
+      <td><span class="pill ${r.mgr==='Completed'?'green':r.mgr==='In progress'?'amber':'gray'}">${r.mgr}</span></td>
+      <td>${r.rating?`<span class="stars">${starStr(r.rating)}</span>`:'<span style="color:var(--muted)">—</span>'}</td>
+    </tr>`;
+  }).join('');
+  content.innerHTML=`
+    <div class="hint">★ <b>${cyc.name}</b> · due ${fmtDate(cyc.due)} · <b>${s.completionPct}%</b> of manager reviews complete (${s.done}/${s.total})</div>
+    <div class="kpis">
+      <div class="kpi"><div class="label">Cycle completion</div><div class="val">${s.completionPct}%</div><div class="delta ${s.completionPct>=100?'up':''}">${s.done}/${s.total} reviews</div></div>
+      <div class="kpi"><div class="label">Avg rating</div><div class="val">${s.avgRating||'—'}</div><div class="delta up">out of 5</div></div>
+      <div class="kpi"><div class="label">Self-reviews in</div><div class="val">${s.selfIn}</div><div class="delta ${s.selfIn<s.total?'down':'up'}">${s.total-s.selfIn} pending</div></div>
+      <div class="kpi"><div class="label">Goals on track</div><div class="val">${s.goalsOnTrack}</div><div class="delta ${s.goalsAtRisk?'down':'up'}">${s.goalsAtRisk} at risk</div></div>
+    </div>
+    <div class="grid2" style="margin-bottom:20px">
+      <div class="panel"><div class="hd">Rating distribution</div><div class="bd">${distBars}</div></div>
+      <div class="panel"><div class="hd">Goals <span style="font-weight:500;color:var(--muted);font-size:12.5px">${goals.length} total</span></div><div class="bd" style="max-height:336px;overflow:auto">${goalRows}</div></div>
+    </div>
+    <div class="panel"><div class="hd">Review status <span style="font-weight:500;color:var(--muted);font-size:12.5px">Click a row to review &amp; rate</span></div><div class="bd" style="padding:0">
+      <table><thead><tr><th>Employee</th><th>Dept</th><th>Self-review</th><th>Manager review</th><th>Rating</th></tr></thead><tbody>${rows}</tbody></table>
+    </div></div>`;
+}
+function openReview(id){
+  const e=DB.emps.find(x=>x.id===id); const r=reviewFor(id);
+  const goals=(DB.perf.goals||[]).filter(g=>g.empId===id);
+  const stars=[1,2,3,4,5].map(n=>`<button type="button" class="starbtn ${r.rating>=n?'on':''}" onclick="setRating('${id}',${n})">★</button>`).join('');
+  const m=document.getElementById('modal');
+  m.innerHTML=`
+    <div class="hd"><h3><span class="avatar">${initials(e.name)}</span>${e.name} — Review</h3><button class="x" onclick="closeModal()">×</button></div>
+    <div class="bd">
+      <div class="row"><div><label class="fld">Department</label><div>${e.dept}</div></div><div><label class="fld">Manager</label><div>${e.manager||'—'}</div></div></div>
+      <div class="row">
+        <div><label class="fld">Self-review</label><select id="rv_self"><option ${r.self==='Not started'?'selected':''}>Not started</option><option ${r.self==='Submitted'?'selected':''}>Submitted</option></select></div>
+        <div><label class="fld">Manager review</label><select id="rv_mgr"><option ${r.mgr==='Not started'?'selected':''}>Not started</option><option ${r.mgr==='In progress'?'selected':''}>In progress</option><option ${r.mgr==='Completed'?'selected':''}>Completed</option></select></div>
+      </div>
+      <div style="margin-top:4px"><label class="fld">Overall rating</label><div class="rate">${stars}</div></div>
+      <div style="margin-top:18px"><label class="fld">Goals (${goals.length})</label>
+        ${goals.map(g=>`<div style="margin-bottom:11px"><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px"><span>${g.title}</span><span class="pill ${g.status==='Done'?'green':g.status==='At risk'?'red':'gray'}">${g.progress}%</span></div><div class="bar-track"><div class="bar-fill" style="width:${g.progress}%"></div></div></div>`).join('')||'<div style="color:var(--muted);font-size:13px">No goals assigned</div>'}
+      </div>
+    </div>
+    <div class="ft"><button class="btn ghost sm" onclick="closeModal()">Close</button><button class="btn" onclick="saveReview('${id}')">Save review</button></div>`;
+  document.getElementById('scrim').classList.add('on');
+}
+function setRating(id,n){
+  ensureReview(id);
+  const sf=document.getElementById('rv_self'), mg=document.getElementById('rv_mgr');
+  if(sf) DB.perf.reviews[id].self=sf.value;
+  if(mg) DB.perf.reviews[id].mgr=mg.value;
+  DB.perf.reviews[id].rating=n; save(); openReview(id);
+}
+function saveReview(id){
+  ensureReview(id);
+  DB.perf.reviews[id].self=document.getElementById('rv_self').value;
+  DB.perf.reviews[id].mgr=document.getElementById('rv_mgr').value;
+  save(); closeModal(); render();
+}
+
+/* ---- Reporting ---- */
+let repTab='overview';
+function vReports(){
+  setHeader('Reporting','Standard reports + natural-language queries');
+  const bd=byDept();
+  const locM={}; active().forEach(e=>locM[e.location]=(locM[e.location]||0)+1);
+  const tenure={'<1y':0,'1-3y':0,'3-5y':0,'5y+':0};
+  active().forEach(e=>{ const y=(Date.now()-new Date(e.hire))/3.156e10; tenure[y<1?'<1y':y<3?'1-3y':y<5?'3-5y':'5y+']++; });
+  const seg=(k,t)=>`<button class="${repTab===k?'on':''}" onclick="repTab='${k}';vReports()">${t}</button>`;
+  let body='';
+  if(repTab==='overview'){
+    const mk=(title,obj)=>{ const mx=Math.max(...Object.values(obj),1);
+      return `<div class="panel"><div class="hd">${title}</div><div class="bd">${Object.entries(obj).map(([k,v])=>`
+        <div class="bar-row"><div class="nm">${k}</div><div class="bar-track"><div class="bar-fill" style="width:${v/mx*100}%"></div></div><div class="vv">${v}</div></div>`).join('')}</div></div>`; };
+    body=`<div class="grid2">${mk('Headcount by department',bd)}${mk('Headcount by location',locM)}</div>
+      <div class="grid2" style="margin-top:18px">${mk('Tenure distribution',tenure)}
+      <div class="panel"><div class="hd">Attrition (last 12 months)</div><div class="bd">
+        <div style="font-size:40px;font-weight:750">${attrition12m().toFixed(1)}%</div>
+        <div style="color:var(--muted);font-size:13px;margin-top:6px">${DB.emps.filter(e=>e.termDate&&e.termDate>=daysAgo(365)).length} leavers · target &lt; 15%</div></div></div></div>`;
+  } else if(repTab==='nl'){
+    body=`<div class="hint">Type a question and NayaHR turns it into a report. Try the examples or write your own.</div>
+      <div style="display:flex;gap:10px;margin-bottom:14px"><input id="nlq" placeholder="e.g. average salary in Sales" style="max-width:460px"><button class="btn" onclick="runNL()">Run</button></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+        ${['headcount by department','attrition rate','average salary in Engineering','who joined in last 90 days','terminated employees'].map(q=>`<span class="chip" onclick="document.getElementById('nlq').value='${q}';runNL()">${q}</span>`).join('')}</div>
+      <div id="nlout"></div>`;
+  } else if(repTab==='roster'){
+    body=`<div class="panel"><div class="hd">Full roster <button class="btn ghost sm" onclick="exportCSV()">⤓ Export CSV</button></div><div class="bd" style="padding:0">
+      <table><thead><tr><th>Name</th><th>Dept</th><th>Title</th><th>Location</th><th>Hire</th><th>Salary</th><th>Status</th></tr></thead><tbody>
+      ${DB.emps.map(e=>`<tr><td>${e.name}</td><td>${e.dept}</td><td>${e.title}</td><td>${e.location}</td><td>${fmtDate(e.hire)}</td><td>${inr(e.salary)}</td><td><span class="pill ${e.status==='Active'?'green':'red'}">${e.status}</span></td></tr>`).join('')}
+      </tbody></table></div></div>`;
+  }
+  content.innerHTML=`<div class="seg" style="margin-bottom:18px">${seg('overview','Overview')}${seg('nl','Ask in plain English')}${seg('roster','Roster')}</div>${body}`;
+}
+function runNL(){
+  const q=document.getElementById('nlq').value;
+  document.getElementById('nlout').innerHTML=`<div class="panel"><div class="bd">${answer(q,true)}</div></div>`;
+}
+function exportCSV(){
+  const rows=[['Name','Department','Title','Location','HireDate','Salary','Status']];
+  DB.emps.forEach(e=>rows.push([e.name,e.dept,e.title,e.location,e.hire,e.salary,e.status]));
+  const csv=rows.map(r=>r.map(c=>`"${c}"`).join(',')).join('\n');
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download='nayahr_roster.csv'; a.click();
+}
+
+/* ---- Onboard / Import ---- */
+function vOnboard(){
+  setHeader('Import / Onboard','Bring your existing data in minutes — the “less effort” promise');
+  content.innerHTML=`
+    <div class="hint">✦ In the full product, AI reads your spreadsheet, auto-detects columns, and maps them to fields. This prototype demonstrates a simple CSV import.</div>
+    <div class="grid2">
+      <div class="panel"><div class="hd">Import employees from CSV</div><div class="bd">
+        <p style="font-size:13.5px;color:var(--muted)">Columns: <code>name, department, title, location, salary</code> (header row required).</p>
+        <input type="file" id="csv" accept=".csv" style="margin:10px 0"/>
+        <div><button class="btn" onclick="importCSV()">Import</button>
+        <button class="btn ghost" onclick="loadSample()">Load sample row</button></div>
+        <div id="impout" style="margin-top:14px;font-size:13px"></div>
+      </div></div>
+      <div class="panel"><div class="hd">Quick actions</div><div class="bd">
+        <p style="font-size:13.5px">Reset the prototype to fresh demo data:</p>
+        <button class="btn ghost" onclick="resetData()">↻ Reset demo data</button>
+        <p style="font-size:13.5px;margin-top:18px">Export current roster:</p>
+        <button class="btn ghost" onclick="exportCSV()">⤓ Export CSV</button>
+      </div></div>
+    </div>`;
+}
+function loadSample(){ document.getElementById('impout').innerHTML='<pre style="background:#f4f6fb;padding:10px;border-radius:8px;font-size:12px">name,department,title,location,salary\nPriya Nair,Engineering,Senior Engineer,Pune,1400000\nRahul Bose,Sales,Account Executive,Mumbai,900000</pre>'; }
+function importCSV(){
+  const f=document.getElementById('csv').files[0];
+  if(!f){ alert('Choose a CSV file'); return; }
+  const r=new FileReader();
+  r.onload=()=>{
+    const lines=r.result.split(/\r?\n/).filter(Boolean);
+    const head=lines[0].split(',').map(s=>s.trim().toLowerCase());
+    let n=0;
+    lines.slice(1).forEach(ln=>{
+      const c=ln.split(',').map(s=>s.replace(/^"|"$/g,'').trim());
+      const o={}; head.forEach((h,i)=>o[h]=c[i]);
+      if(!o.name) return;
+      const sal=parseInt(o.salary)||600000;
+      DB.emps.push({id:uid(),name:o.name,dept:o.department||'Operations',title:o.title||'Employee',
+        email:o.name.toLowerCase().replace(/ /g,'.')+'@company.com',location:o.location||'Remote',
+        hire:daysAgo(0),status:'Active',termDate:null,salary:sal,manager:null,
+        history:[{date:daysAgo(0),type:'Hire',detail:`Hired as ${o.title||'Employee'} · ${o.department||'Operations'}`,sal}]});
+      n++;
+    });
+    save();
+    document.getElementById('impout').innerHTML=`<span class="pill green">✓ Imported ${n} employees</span>`;
+  };
+  r.readAsText(f);
+}
+
+/* ============================================================
+   AI assistant — simple intent matcher over live data.
+   (In production this is a Claude API call with tool access.)
+   ============================================================ */
+function answer(qRaw, asHtml){
+  const q=qRaw.toLowerCase();
+  const num=v=>asHtml?`<b>${v}</b>`:v;
+  // dept-specific count
+  for(const d of DEPTS){
+    if(q.includes(d.toLowerCase()) && /(how many|count|headcount|people|employees|number)/.test(q)){
+      const n=active().filter(e=>e.dept===d).length;
+      return `There are ${num(n)} active employees in ${d}.`;
+    }
+    if(q.includes(d.toLowerCase()) && /(salary|pay|comp)/.test(q)){
+      const a=active().filter(e=>e.dept===d); const avg=a.length?Math.round(a.reduce((s,e)=>s+e.salary,0)/a.length):0;
+      return `Average salary in ${d} is ${num(inr(avg))}/yr across ${a.length} employees.`;
+    }
+  }
+  if(/(attrition|turnover|churn)/.test(q)){
+    const leavers=DB.emps.filter(e=>e.termDate&&e.termDate>=daysAgo(365)).length;
+    return `12-month attrition is ${num(attrition12m().toFixed(1)+'%')} (${leavers} leavers). ${attrition12m()>15?'⚠️ Above the 15% target.':'Within the 15% target.'}`;
+  }
+  if(/(headcount|how many|total).*(department|by dept|each)/.test(q) || q.includes('headcount by department')){
+    const bd=byDept(); return 'Headcount by department: '+Object.entries(bd).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`${k}: ${num(v)}`).join(', ')+'.';
+  }
+  if(/(how many|total|count).*(employee|people|staff|headcount)/.test(q) || q==='headcount'){
+    return `You have ${num(headcount())} active employees (and ${DB.emps.length} records in total).`;
+  }
+  if(/(new|joined|joiner|hire).*(90|recent|last)/.test(q) || q.includes('last 90 days')){
+    const list=DB.emps.filter(e=>e.hire>=daysAgo(90));
+    return `${num(list.length)} people joined in the last 90 days${list.length?': '+list.map(e=>e.name).join(', '):''}.`;
+  }
+  if(/(terminated|left|resigned|attrited|exit)/.test(q)){
+    const list=DB.emps.filter(e=>e.status==='Terminated');
+    return `${num(list.length)} terminated records${list.length?': '+list.slice(0,8).map(e=>e.name).join(', ')+(list.length>8?'…':''):''}.`;
+  }
+  if(/(average|avg).*(salary|pay|comp)/.test(q)){
+    const a=active(); const avg=Math.round(a.reduce((s,e)=>s+e.salary,0)/a.length);
+    return `Company-wide average salary is ${num(inr(avg))}/yr.`;
+  }
+  if(/(tenure|how long)/.test(q)){ return `Average tenure is ${num(avgTenureYears().toFixed(1)+' years')}.`; }
+  if(/(pending|approve).*(leave|time off|pto)/.test(q) || q.includes('pending leave')){
+    return `There are ${num(pendingLeaves())} pending leave requests awaiting approval.`;
+  }
+  if(/(location|where|city)/.test(q)){
+    const m={}; active().forEach(e=>m[e.location]=(m[e.location]||0)+1);
+    return 'By location: '+Object.entries(m).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`${k}: ${num(v)}`).join(', ')+'.';
+  }
+  return `I can answer questions about headcount, departments, attrition, salaries, tenure, new joiners, leave, and locations. Try: "how many people in Sales", "attrition rate", or "average salary in Engineering".`;
+}
+
+/* AI panel wiring */
+const aiBody=document.getElementById('aiBody');
+function aiMsg(text,who){ const d=document.createElement('div'); d.className='msg '+who; d.innerHTML=text; aiBody.appendChild(d); aiBody.scrollTop=aiBody.scrollHeight; }
+/* ============================================================
+   Compensation — pay bands, compa-ratio, range position
+   ============================================================ */
+const BANDS={
+  Associate:{min:400000,mid:600000,max:850000},
+  Senior:{min:700000,mid:1000000,max:1400000},
+  Manager:{min:1200000,mid:1700000,max:2400000},
+  Leadership:{min:2000000,mid:2800000,max:4000000}
+};
+const BAND_ORDER=['Associate','Senior','Manager','Leadership'];
+function levelOf(e){ const t=e.title||''; if(/Head|VP|Director|Chief/.test(t)) return 'Leadership'; if(/Manager|Lead/.test(t)) return 'Manager'; if(/Senior|Sr\.?|Principal|Staff/.test(t)) return 'Senior'; return 'Associate'; }
+function bandOf(e){ return BANDS[levelOf(e)]; }
+function compaRatio(e){ return e.salary/bandOf(e).mid; }
+function rangePen(e){ const b=bandOf(e); return Math.max(0,Math.min(100,(e.salary-b.min)/(b.max-b.min)*100)); }
+function compStatus(e){ const b=bandOf(e); return e.salary<b.min?'Below':e.salary>b.max?'Above':'In range'; }
+
+let compFilter='all';
+function vComp(){
+  setHeader('Compensation','Pay bands, compa-ratio, and salary ranges');
+  const act=active();
+  const total=act.reduce((s,e)=>s+e.salary,0);
+  const avg=Math.round(total/act.length);
+  const med=Math.round(median(act.map(e=>e.salary)));
+  const below=act.filter(e=>compStatus(e)==='Below').length;
+  const above=act.filter(e=>compStatus(e)==='Above').length;
+  const bandRows=BAND_ORDER.map(lvl=>{ const b=BANDS[lvl]; const inb=act.filter(e=>levelOf(e)===lvl);
+    const cr=inb.length?(inb.reduce((s,e)=>s+compaRatio(e),0)/inb.length):0;
+    return `<tr><td><span style="font-weight:600">${lvl}</span></td><td>${inr(b.min)}</td><td>${inr(b.mid)}</td><td>${inr(b.max)}</td><td>${inb.length}</td><td>${cr?cr.toFixed(2):'—'}</td></tr>`;
+  }).join('');
+  const deptAvg={}; act.forEach(e=>{ (deptAvg[e.dept]=deptAvg[e.dept]||[]).push(e.salary); });
+  const dmax=Math.max(...Object.values(deptAvg).map(a=>a.reduce((s,x)=>s+x,0)/a.length),1);
+  const deptBars=Object.entries(deptAvg).sort((a,b)=>(b[1].reduce((s,x)=>s+x,0)/b[1].length)-(a[1].reduce((s,x)=>s+x,0)/a[1].length)).map(([d,a])=>{const av=a.reduce((s,x)=>s+x,0)/a.length;return `<div class="bar-row"><div class="nm">${d}</div><div class="bar-track"><div class="bar-fill" style="width:${av/dmax*100}%"></div></div><div class="vv" style="width:56px">${inr(av)}</div></div>`;}).join('');
+  let list=act.slice().sort((a,b)=>b.salary-a.salary);
+  if(compFilter==='below') list=list.filter(e=>compStatus(e)==='Below');
+  if(compFilter==='above') list=list.filter(e=>compStatus(e)==='Above');
+  const rows=list.map(e=>{ const b=bandOf(e); const st=compStatus(e);
+    return `<tr class="clk" onclick="openComp('${e.id}')">
+      <td><span class="avatar">${initials(e.name)}</span>${e.name}<div style="font-size:11.5px;color:var(--muted);margin-left:42px">${e.title}</div></td>
+      <td><span class="pill gray">${levelOf(e)}</span></td><td>${inr(e.salary)}</td>
+      <td style="min-width:160px"><div style="display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted);margin-bottom:3px"><span>${inr(b.min)}</span><span>${inr(b.max)}</span></div><div class="rangebar"><div class="rangefill" style="width:${rangePen(e)}%"></div></div></td>
+      <td>${compaRatio(e).toFixed(2)}</td>
+      <td><span class="pill ${st==='In range'?'green':st==='Below'?'amber':'red'}">${st}</span></td></tr>`;
+  }).join('');
+  const seg=(k,t)=>`<button class="${compFilter===k?'on':''}" onclick="compFilter='${k}';vComp()">${t}</button>`;
+  content.innerHTML=`
+    <div class="kpis">
+      <div class="kpi"><div class="label">Annual payroll</div><div class="val">${inr(total)}</div><div class="delta up">${act.length} active</div></div>
+      <div class="kpi"><div class="label">Average salary</div><div class="val">${inr(avg)}</div><div class="delta">median ${inr(med)}</div></div>
+      <div class="kpi"><div class="label">Below range</div><div class="val">${below}</div><div class="delta ${below?'down':'up'}">need review</div></div>
+      <div class="kpi"><div class="label">Above range</div><div class="val">${above}</div><div class="delta ${above?'down':'up'}">over max</div></div>
+    </div>
+    <div class="grid2" style="margin-bottom:20px">
+      <div class="panel"><div class="hd">Pay bands</div><div class="bd" style="padding:0"><table><thead><tr><th>Level</th><th>Min</th><th>Mid</th><th>Max</th><th>People</th><th>Avg compa-ratio</th></tr></thead><tbody>${bandRows}</tbody></table></div></div>
+      <div class="panel"><div class="hd">Average pay by department</div><div class="bd">${deptBars}</div></div>
+    </div>
+    <div class="panel"><div class="hd"><span>Compensation detail</span><div class="seg">${seg('all','All')}${seg('below','Below range')}${seg('above','Above range')}</div></div>
+      <div class="bd" style="padding:0"><table><thead><tr><th>Employee</th><th>Level</th><th>Salary</th><th>Range position</th><th>Compa-ratio</th><th>Status</th></tr></thead><tbody>${rows||'<tr><td colspan=6 class="empty">None in this filter</td></tr>'}</tbody></table></div></div>`;
+}
+function openComp(id){
+  const e=DB.emps.find(x=>x.id===id); const b=bandOf(e);
+  const m=document.getElementById('modal');
+  m.innerHTML=`<div class="hd"><h3><span class="avatar">${initials(e.name)}</span>${e.name} — Compensation</h3><button class="x" onclick="closeModal()">×</button></div>
+    <div class="bd">
+      <div class="row"><div><label class="fld">Level / band</label><div style="font-weight:600">${levelOf(e)}</div><div style="font-size:12px;color:var(--muted)">${inr(b.min)} – ${inr(b.max)} · mid ${inr(b.mid)}</div></div>
+        <div><label class="fld">Current salary</label><div style="font-weight:600">${inr(e.salary)}/yr</div><div style="font-size:12px;color:var(--muted)">Compa-ratio ${compaRatio(e).toFixed(2)} · ${compStatus(e)}</div></div></div>
+      <div style="margin:8px 0 18px"><label class="fld">Range position</label><div class="rangebar" style="height:12px"><div class="rangefill" style="width:${rangePen(e)}%"></div></div></div>
+      <div class="row"><div><label class="fld">New annual salary (₹)</label><input id="c_sal" type="number" value="${e.salary}"></div>
+        <div><label class="fld">Quick merit</label><div style="display:flex;gap:6px"><button class="btn ghost sm" type="button" onclick="bump(5)">+5%</button><button class="btn ghost sm" type="button" onclick="bump(8)">+8%</button><button class="btn ghost sm" type="button" onclick="bump(12)">+12%</button></div></div></div>
+      <p style="font-size:12.5px;color:var(--muted)">Applying a change records a <b>Comp change</b> on ${e.name.split(' ')[0]}'s effective-dated history.</p>
+    </div>
+    <div class="ft"><button class="btn ghost sm" onclick="closeModal()">Cancel</button><button class="btn" onclick="applyComp('${e.id}')">Apply change</button></div>`;
+  document.getElementById('scrim').classList.add('on');
+}
+function bump(pct){ const i=document.getElementById('c_sal'); i.value=Math.round((parseInt(i.value)||0)*(1+pct/100)); }
+function applyComp(id){
+  const e=DB.emps.find(x=>x.id===id); const ns=parseInt(document.getElementById('c_sal').value)||e.salary;
+  if(ns!==e.salary){ const pct=Math.round((ns/e.salary-1)*100); e.history.push({date:daysAgo(0),type:'Comp change',detail:`Salary revised${pct?` (${pct>0?'+':''}${pct}%)`:''}`,sal:ns}); e.salary=ns; }
+  save(); closeModal(); render();
+}
+
+/* ============================================================
+   Personas — role/identity layer (ESS / MSS / Admin)
+   ============================================================ */
+const ICONS={
+  dashboard:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="1.6"/><rect x="14" y="3" width="7" height="5" rx="1.6"/><rect x="14" y="12" width="7" height="9" rx="1.6"/><rect x="3" y="16" width="7" height="5" rx="1.6"/></svg>`,
+  people:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.4"/><path d="M3.4 19a5.6 5.6 0 0 1 11.2 0"/><path d="M16.2 5.3a3.4 3.4 0 0 1 0 6.4"/><path d="M17.6 13.4A5.6 5.6 0 0 1 21 18.6"/></svg>`,
+  recruit:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="7.5" width="18" height="12.5" rx="2"/><path d="M8.5 7.5V6a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v1.5"/><path d="M3 12.5h18"/></svg>`,
+  perform:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="9" r="5.2"/><path d="M8.6 13.4 7.2 20.5l4.8-2.7 4.8 2.7-1.4-7.1"/></svg>`,
+  time:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.4V12l3.2 1.9"/></svg>`,
+  reports:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3.5 20.5h17"/><rect x="5" y="11" width="3.4" height="7" rx="1"/><rect x="10.3" y="6" width="3.4" height="12" rx="1"/><rect x="15.6" y="9" width="3.4" height="9" rx="1"/></svg>`,
+  onboard:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 15V4"/><path d="m8 8 4-4 4 4"/><path d="M5 14.5v3A1.5 1.5 0 0 0 6.5 19h11a1.5 1.5 0 0 0 1.5-1.5v-3"/></svg>`,
+  home:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 11.4 12 5l8 6.4"/><path d="M6 10v9.5a1 1 0 0 0 1 1h3v-5h4v5h3a1 1 0 0 0 1-1V10"/></svg>`,
+  profile:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="9.5" r="3"/><path d="M6.3 18.4a6 6 0 0 1 11.4 0"/></svg>`,
+  timeoff:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 9.5h17"/><path d="M8 3.5v3M16 3.5v3"/></svg>`,
+  directory:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4.5" width="18" height="15" rx="2"/><circle cx="9" cy="11" r="2.2"/><path d="M5.8 16a3.4 3.4 0 0 1 6.4 0"/><path d="M15 10h3.5M15 13h3.5"/></svg>`,
+  comp:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><ellipse cx="12" cy="6.3" rx="7" ry="3"/><path d="M5 6.3v5c0 1.7 3.1 3 7 3s7-1.3 7-3v-5"/><path d="M5 11.3v5c0 1.7 3.1 3 7 3s7-1.3 7-3v-5"/></svg>`,
+  approvals:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/><path d="m8.4 12 2.4 2.4 4.8-4.8"/></svg>`,
+  shield:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3.5 5 6v5c0 4.2 2.9 7.4 7 9 4.1-1.6 7-4.8 7-9V6l-7-2.5Z"/></svg>`
+};
+const NAV={
+  admin:[ {v:'dashboard',l:'Dashboard',i:'dashboard'},{v:'people',l:'People (Core HR)',i:'people'},{v:'recruit',l:'Recruitment',i:'recruit'},{v:'perform',l:'Performance',i:'perform'},{v:'comp',l:'Compensation',i:'comp'},{v:'time',l:'Time & Leave',i:'time'},{v:'reports',l:'Reporting',i:'reports'},{v:'onboard',l:'Import / Onboard',i:'onboard'} ],
+  manager:[ {v:'mhome',l:'Team Home',i:'home'},{v:'mteam',l:'My Team',i:'people'},{v:'mappr',l:'Approvals',i:'approvals'},{v:'mperf',l:'Team Performance',i:'perform'},{v:'mcomp',l:'Team Comp',i:'comp'},{v:'mhire',l:'Hiring',i:'recruit'} ],
+  employee:[ {v:'ehome',l:'My Home',i:'home'},{v:'eprofile',l:'My Profile',i:'profile'},{v:'etime',l:'My Time Off',i:'timeoff'},{v:'eperf',l:'My Performance',i:'perform'},{v:'edir',l:'Directory',i:'directory'} ]
+};
+function renderNav(){
+  document.getElementById('nav').innerHTML=NAV[ROLE].map(n=>`<button data-view="${n.v}" class="${VIEW===n.v?'active':''}"><span class="ico">${ICONS[n.i]}</span> ${n.l}</button>`).join('');
+}
+
+/* ---- identity helpers ---- */
+function meEmp(){ return DB.emps.find(e=>e.id===ME); }
+function teamOf(name){ return active().filter(e=>e.manager===name); }
+function managersList(){ return active().filter(e=>teamOf(e.name).length>0).sort((a,b)=>teamOf(b.name).length-teamOf(a.name).length); }
+function leaveMgrName(l){ const e=DB.emps.find(x=>x.name===l.emp); return e?e.manager:null; }
+function teamPendingLeaves(mgrName){ return DB.leaves.filter(l=>l.status==='Pending'&&leaveMgrName(l)===mgrName); }
+function leaveBalance(name){ const used=DB.leaves.filter(l=>l.emp===name&&l.status==='Approved').reduce((s,l)=>s+l.days,0); return Math.max(0,18-used); }
+function field(l,v){ return `<div style="display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--line-2);font-size:13.5px"><span style="color:var(--muted)">${l}</span><span style="font-weight:500;text-align:right">${v}</span></div>`; }
+
+/* ---- role switcher UI ---- */
+function defaultMe(role){ const m=managersList(); if(role==='manager') return (m[0]||active()[0]||DB.emps[0]).id; return (active()[0]||DB.emps[0]).id; }
+function setRole(role,meId){
+  ROLE=role; ME = role==='admin' ? null : (meId||defaultMe(role));
+  VIEW=NAV[ROLE][0].v;
+  AI_HISTORY=[]; const ab=document.getElementById('aiBody'); if(ab) ab.innerHTML='';
+  renderNav(); renderRoleSwitch(); initAIChips(); render();
+}
+function toggleRoleMenu(e){ e.stopPropagation(); const m=document.getElementById('roleMenu'); if(m) m.classList.toggle('on'); }
+function closeRoleMenu(){ const m=document.getElementById('roleMenu'); if(m) m.classList.remove('on'); }
+function renderRoleSwitch(){
+  const el=document.getElementById('roleSwitch'); if(!el) return;
+  const roleLabel={admin:'HR Admin',manager:'Manager',employee:'Employee'}[ROLE];
+  let name, sub;
+  if(ROLE==='admin'){ name='HR Admin'; sub='Full org access'; }
+  else { const e=meEmp(); name=e?e.name:'—'; sub = ROLE==='manager' ? `Manager · ${teamOf(name).length} reports` : `Employee · ${e?e.dept:''}`; }
+  const people = ROLE==='admin' ? '' :
+    `<div class="mlbl">Acting as</div><select onchange="setRole('${ROLE}', this.value)">${
+      (ROLE==='manager'?managersList():active()).map(e=>`<option value="${e.id}" ${e.id===ME?'selected':''}>${e.name}${ROLE==='manager'?' · '+teamOf(e.name).length+' reports':' · '+e.dept}</option>`).join('')}</select>`;
+  el.innerHTML=`<div class="rolewrap">
+    <div class="rolectl" onclick="toggleRoleMenu(event)">
+      <span class="avatar">${ROLE==='admin'?'HR':initials(name)}</span>
+      <div class="rl"><div class="rn">${name}</div><div class="rr">${sub}</div></div><span class="cv">▾</span>
+    </div>
+    <div class="rolemenu" id="roleMenu" onclick="event.stopPropagation()">
+      <div class="mlbl">View as</div>
+      ${[['admin','HR Admin','shield'],['manager','Manager','people'],['employee','Employee','profile']].map(([r,l,ic])=>`<div class="roleopt ${ROLE===r?'on':''}" onclick="setRole('${r}')"><span class="ri">${ICONS[ic]}</span>${l}</div>`).join('')}
+      ${people}
+    </div></div>`;
+}
+document.addEventListener('click',()=>closeRoleMenu());
+
+/* ============================================================
+   Employee self-service (ESS)
+   ============================================================ */
+function vEHome(){
+  const e=meEmp(); setHeader('Welcome, '+e.name.split(' ')[0], `${e.title} · ${e.dept} · ${e.location}`);
+  const bal=leaveBalance(e.name); const rv=reviewFor(e.id);
+  const myGoals=(DB.perf.goals||[]).filter(g=>g.empId===e.id);
+  const pendingMine=DB.leaves.filter(l=>l.emp===e.name&&l.status==='Pending').length;
+  const tasks=[];
+  if(rv.self!=='Submitted') tasks.push('Complete your self-review for '+DB.perf.cycle.name);
+  if(pendingMine) tasks.push(pendingMine+' leave request'+(pendingMine>1?'s':'')+' awaiting your manager');
+  myGoals.filter(g=>g.status==='At risk').forEach(g=>tasks.push('Goal at risk: '+g.title));
+  content.innerHTML=`
+    <div class="kpis">
+      <div class="kpi"><div class="label">Leave balance</div><div class="val">${bal}</div><div class="delta up">days available</div></div>
+      <div class="kpi"><div class="label">My goals</div><div class="val">${myGoals.length}</div><div class="delta ${myGoals.some(g=>g.status==='At risk')?'down':'up'}">${myGoals.filter(g=>g.status==='On track').length} on track</div></div>
+      <div class="kpi"><div class="label">Self-review</div><div class="val" style="font-size:22px;margin-top:13px"><span class="pill ${rv.self==='Submitted'?'green':'amber'}">${rv.self}</span></div></div>
+      <div class="kpi"><div class="label">My rating</div><div class="val">${rv.rating?`<span class="stars" style="font-size:22px">${starStr(rv.rating)}</span>`:'—'}</div><div class="delta up">${rv.rating?'this cycle':'pending review'}</div></div>
+    </div>
+    <div class="grid2">
+      <div class="panel"><div class="hd">Your tasks</div><div class="bd">${tasks.length?tasks.map(t=>`<div style="display:flex;gap:11px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line-2);font-size:13.5px"><span style="color:var(--brand)">●</span>${t}</div>`).join(''):'<div class="empty" style="padding:28px">You\'re all caught up 🎉</div>'}</div></div>
+      <div class="panel"><div class="hd">Quick actions</div><div class="bd" style="display:flex;flex-direction:column;gap:10px;align-items:flex-start">
+        <button class="btn" onclick="VIEW='etime';renderNav();render()">Request time off</button>
+        <button class="btn ghost" onclick="VIEW='eperf';renderNav();render()">My goals &amp; review</button>
+        <button class="btn ghost" onclick="VIEW='eprofile';renderNav();render()">View my profile</button>
+      </div></div>
+    </div>`;
+}
+function vEProfile(){
+  const e=meEmp(); setHeader('My Profile','Your record and effective-dated history');
+  content.innerHTML=`<div class="grid2">
+    <div class="panel"><div class="hd">Personal &amp; job</div><div class="bd">
+      ${field('Name',e.name)}${field('Email',e.email)}${field('Title',e.title)}${field('Department',e.dept)}${field('Location',e.location)}${field('Manager',e.manager||'—')}${field('Hire date',fmtDate(e.hire))}${field('Tenure',((Date.now()-new Date(e.hire))/3.156e10).toFixed(1)+' years')}${field('Annual salary',inr(e.salary))}
+    </div></div>
+    <div class="panel"><div class="hd">My history</div><div class="bd"><div class="timeline">${e.history.map(h=>`<div class="tl-item"><div class="dt">${fmtDate(h.date)} · ${h.type}</div><div class="ev">${h.detail}${h.sal?` — ${inr(h.sal)}/yr`:''}</div></div>`).join('')}</div></div></div>
+  </div>`;
+}
+function vETime(){
+  const e=meEmp(); const bal=leaveBalance(e.name);
+  setHeader('My Time Off','Your balance and requests',`<button class="btn" onclick="reqLeave()">Request time off</button>`);
+  const mine=DB.leaves.filter(l=>l.emp===e.name).sort((a,b)=>a.from<b.from?1:-1);
+  content.innerHTML=`
+    <div class="kpis" style="grid-template-columns:repeat(3,1fr)">
+      <div class="kpi"><div class="label">Available</div><div class="val">${bal}</div><div class="delta up">of 18 days</div></div>
+      <div class="kpi"><div class="label">Used</div><div class="val">${18-bal}</div><div class="delta">approved this year</div></div>
+      <div class="kpi"><div class="label">Pending</div><div class="val">${mine.filter(l=>l.status==='Pending').length}</div><div class="delta">awaiting approval</div></div>
+    </div>
+    <div class="panel"><div class="hd">My requests</div><div class="bd" style="padding:0">
+      <table><thead><tr><th>Type</th><th>From</th><th>Days</th><th>Status</th></tr></thead><tbody>${mine.map(l=>`<tr><td>${l.type}</td><td>${fmtDate(l.from)}</td><td>${l.days}</td><td><span class="pill ${l.status==='Approved'?'green':l.status==='Pending'?'amber':'red'}">${l.status}</span></td></tr>`).join('')||'<tr><td colspan=4 class="empty">No requests yet</td></tr>'}</tbody></table>
+    </div></div>`;
+}
+function reqLeave(){
+  const m=document.getElementById('modal');
+  m.innerHTML=`<div class="hd"><h3>Request time off</h3><button class="x" onclick="closeModal()">×</button></div>
+    <div class="bd">
+      <div class="row"><div><label class="fld">Type</label><select id="lv_type"><option>Annual</option><option>Sick</option><option>Casual</option><option>Work from home</option></select></div>
+        <div><label class="fld">Start date</label><input type="date" id="lv_from" value="${daysAgo(0)}"></div></div>
+      <div class="row"><div><label class="fld">Days</label><input type="number" id="lv_days" value="1" min="1"></div><div></div></div>
+    </div>
+    <div class="ft"><button class="btn ghost sm" onclick="closeModal()">Cancel</button><button class="btn" onclick="submitLeave()">Submit request</button></div>`;
+  document.getElementById('scrim').classList.add('on');
+}
+function submitLeave(){
+  const e=meEmp(); const g=i=>document.getElementById(i).value;
+  DB.leaves.unshift({ id:uid(), emp:e.name, dept:e.dept, type:g('lv_type'), from:g('lv_from'), days:parseInt(g('lv_days'))||1, status:'Pending' });
+  save(); closeModal(); render();
+}
+function vEPerf(){
+  const e=meEmp(); const rv=reviewFor(e.id); const goals=(DB.perf.goals||[]).filter(g=>g.empId===e.id);
+  setHeader('My Performance',DB.perf.cycle.name+' · due '+fmtDate(DB.perf.cycle.due));
+  content.innerHTML=`
+    <div class="kpis" style="grid-template-columns:repeat(3,1fr)">
+      <div class="kpi"><div class="label">Self-review</div><div class="val" style="font-size:20px;margin-top:14px"><span class="pill ${rv.self==='Submitted'?'green':'amber'}">${rv.self}</span></div></div>
+      <div class="kpi"><div class="label">Manager review</div><div class="val" style="font-size:20px;margin-top:14px"><span class="pill ${rv.mgr==='Completed'?'green':rv.mgr==='In progress'?'amber':'gray'}">${rv.mgr}</span></div></div>
+      <div class="kpi"><div class="label">My rating</div><div class="val">${rv.rating?`<span class="stars" style="font-size:24px">${starStr(rv.rating)}</span>`:'—'}</div></div>
+    </div>
+    <div class="panel"><div class="hd"><span>My goals <span style="font-weight:500;color:var(--muted);font-size:12.5px">${goals.length}</span></span>${rv.self!=='Submitted'?`<button class="btn sm" onclick="submitSelf()">Submit self-review</button>`:''}</div>
+      <div class="bd">${goals.map(g=>`<div style="margin-bottom:14px"><div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:13px"><span style="font-weight:600">${g.title}</span><span class="pill ${g.status==='Done'?'green':g.status==='At risk'?'red':'gray'}">${g.status} · ${g.progress}%</span></div><div class="bar-track"><div class="bar-fill" style="width:${g.progress}%;background:${g.status==='Done'?'var(--green)':g.status==='At risk'?'var(--red)':'var(--brand)'}"></div></div></div>`).join('')||'<div class="empty">No goals assigned yet</div>'}</div></div>`;
+}
+function submitSelf(){ const e=meEmp(); ensureReview(e.id); DB.perf.reviews[e.id].self='Submitted'; save(); render(); }
+let dirFilter='';
+function vEDir(){
+  setHeader('Directory','Find people across the company');
+  const q=dirFilter.toLowerCase();
+  const list=active().filter(e=>!q||e.name.toLowerCase().includes(q)||e.dept.toLowerCase().includes(q)||e.title.toLowerCase().includes(q)||e.location.toLowerCase().includes(q));
+  content.innerHTML=`
+    <div style="display:flex;gap:12px;margin-bottom:16px;align-items:center"><input id="dsearch" placeholder="Search name, team, title, location…" value="${dirFilter}" style="max-width:380px"><span style="color:var(--muted);font-size:13px">${list.length} people</span></div>
+    <div class="panel"><div class="bd" style="padding:0"><table><thead><tr><th>Name</th><th>Title</th><th>Department</th><th>Location</th></tr></thead>
+      <tbody>${list.map(e=>`<tr><td><span class="avatar">${initials(e.name)}</span>${e.name}</td><td>${e.title}</td><td><span class="pill gray">${e.dept}</span></td><td>${e.location}</td></tr>`).join('')||'<tr><td colspan=4 class="empty">No matches</td></tr>'}</tbody></table></div></div>`;
+  document.getElementById('dsearch').oninput=ev=>{ dirFilter=ev.target.value; const c=ev.target.selectionStart; vEDir(); const s=document.getElementById('dsearch'); s.focus(); s.setSelectionRange(c,c); };
+}
+
+/* ============================================================
+   Manager self-service (MSS)
+   ============================================================ */
+function vMHome(){
+  const e=meEmp(); const team=teamOf(e.name); setHeader('Team Home',`Welcome, ${e.name.split(' ')[0]} · ${team.length} direct reports`);
+  const pend=teamPendingLeaves(e.name);
+  const owed=team.filter(t=>reviewFor(t.id).mgr!=='Completed').length;
+  const myReqs=DB.reqs.filter(r=>r.hiringManager===e.name);
+  content.innerHTML=`
+    <div class="kpis">
+      <div class="kpi"><div class="label">My team</div><div class="val">${team.length}</div><div class="delta up">direct reports</div></div>
+      <div class="kpi"><div class="label">Approvals pending</div><div class="val">${pend.length}</div><div class="delta ${pend.length?'down':'up'}">${pend.length?'needs action':'all clear'}</div></div>
+      <div class="kpi"><div class="label">Reviews to complete</div><div class="val">${owed}</div><div class="delta ${owed?'down':'up'}">of ${team.length}</div></div>
+      <div class="kpi"><div class="label">Open requisitions</div><div class="val">${myReqs.filter(r=>r.status==='Open').length}</div><div class="delta up">${myReqs.reduce((s,r)=>s+(r.status==='Open'?r.openings:0),0)} positions</div></div>
+    </div>
+    <div class="grid2">
+      <div class="panel"><div class="hd">Pending approvals</div><div class="bd" style="padding:0"><table><tbody>${pend.slice(0,6).map(l=>`<tr><td><span class="avatar">${initials(l.emp)}</span>${l.emp}</td><td>${l.type} · ${l.days}d</td><td style="text-align:right"><button class="btn sm" onclick="actLeave('${l.id}','Approved')">Approve</button></td></tr>`).join('')||'<tr><td class="empty">Nothing pending</td></tr>'}</tbody></table></div></div>
+      <div class="panel"><div class="hd">Team at a glance</div><div class="bd">${team.map(t=>{const rv=reviewFor(t.id);return `<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--line-2);font-size:13.5px"><span><span class="avatar">${initials(t.name)}</span>${t.name}</span><span class="pill ${rv.mgr==='Completed'?'green':'gray'}">${rv.mgr==='Completed'?'Reviewed':'Review due'}</span></div>`;}).join('')||'<div class="empty">No direct reports</div>'}</div></div>
+    </div>`;
+}
+function vMTeam(){
+  const e=meEmp(); const team=teamOf(e.name); setHeader('My Team',team.length+' direct reports · click to review');
+  content.innerHTML=`<div class="panel"><div class="bd" style="padding:0"><table><thead><tr><th>Name</th><th>Title</th><th>Location</th><th>Tenure</th><th>Manager review</th><th>Rating</th></tr></thead>
+    <tbody>${team.map(t=>{const rv=reviewFor(t.id);return `<tr class="clk" onclick="openReview('${t.id}')"><td><span class="avatar">${initials(t.name)}</span>${t.name}</td><td>${t.title}</td><td>${t.location}</td><td style="color:var(--muted)">${((Date.now()-new Date(t.hire))/3.156e10).toFixed(1)}y</td><td><span class="pill ${rv.mgr==='Completed'?'green':rv.mgr==='In progress'?'amber':'gray'}">${rv.mgr}</span></td><td>${rv.rating?`<span class="stars">${starStr(rv.rating)}</span>`:'—'}</td></tr>`;}).join('')||'<tr><td colspan=6 class="empty">No direct reports</td></tr>'}</tbody></table></div></div>`;
+}
+function vMAppr(){
+  const e=meEmp(); setHeader('Approvals','Leave requests from your team');
+  const pend=teamPendingLeaves(e.name);
+  const all=DB.leaves.filter(l=>leaveMgrName(l)===e.name).sort((a,b)=>a.status==='Pending'?-1:1);
+  content.innerHTML=`
+    <div class="kpis" style="grid-template-columns:repeat(2,1fr)">
+      <div class="kpi"><div class="label">Pending your approval</div><div class="val">${pend.length}</div></div>
+      <div class="kpi"><div class="label">Team requests (total)</div><div class="val">${all.length}</div></div>
+    </div>
+    <div class="panel"><div class="hd">Team leave requests</div><div class="bd" style="padding:0"><table><thead><tr><th>Employee</th><th>Type</th><th>From</th><th>Days</th><th>Status</th><th>Action</th></tr></thead><tbody>${all.map(l=>`<tr><td><span class="avatar">${initials(l.emp)}</span>${l.emp}</td><td>${l.type}</td><td>${fmtDate(l.from)}</td><td>${l.days}</td><td><span class="pill ${l.status==='Approved'?'green':l.status==='Pending'?'amber':'red'}">${l.status}</span></td><td>${l.status==='Pending'?`<button class="btn sm" onclick="actLeave('${l.id}','Approved')">Approve</button> <button class="btn ghost sm" onclick="actLeave('${l.id}','Rejected')">Reject</button>`:'—'}</td></tr>`).join('')||'<tr><td colspan=6 class="empty">No requests from your team</td></tr>'}</tbody></table></div></div>`;
+}
+function vMPerf(){
+  const e=meEmp(); const team=teamOf(e.name); setHeader('Team Performance',DB.perf.cycle.name);
+  let done=0,rSum=0,rN=0; team.forEach(t=>{const r=reviewFor(t.id); if(r.mgr==='Completed')done++; if(r.rating){rSum+=r.rating;rN++;}});
+  const rows=team.map(t=>{const r=reviewFor(t.id); const goals=(DB.perf.goals||[]).filter(g=>g.empId===t.id);
+    return `<tr class="clk" onclick="openReview('${t.id}')"><td><span class="avatar">${initials(t.name)}</span>${t.name}</td><td><span class="pill ${r.self==='Submitted'?'green':'gray'}">${r.self}</span></td><td><span class="pill ${r.mgr==='Completed'?'green':r.mgr==='In progress'?'amber':'gray'}">${r.mgr}</span></td><td>${r.rating?`<span class="stars">${starStr(r.rating)}</span>`:'—'}</td><td>${goals.length}</td></tr>`;}).join('');
+  content.innerHTML=`
+    <div class="kpis" style="grid-template-columns:repeat(3,1fr)">
+      <div class="kpi"><div class="label">Reviews complete</div><div class="val">${team.length?Math.round(done/team.length*100):0}%</div><div class="delta">${done}/${team.length}</div></div>
+      <div class="kpi"><div class="label">Team avg rating</div><div class="val">${rN?(rSum/rN).toFixed(1):'—'}</div><div class="delta up">out of 5</div></div>
+      <div class="kpi"><div class="label">Reviews to do</div><div class="val">${team.length-done}</div></div>
+    </div>
+    <div class="panel"><div class="hd">Team reviews <span style="font-weight:500;color:var(--muted);font-size:12.5px">Click to review &amp; rate</span></div><div class="bd" style="padding:0"><table><thead><tr><th>Employee</th><th>Self-review</th><th>Manager review</th><th>Rating</th><th>Goals</th></tr></thead><tbody>${rows||'<tr><td colspan=5 class="empty">No reports</td></tr>'}</tbody></table></div></div>`;
+}
+function vMComp(){
+  const e=meEmp(); const team=teamOf(e.name); setHeader('Team Compensation',team.length+' direct reports · read-only');
+  const total=team.reduce((s,t)=>s+t.salary,0);
+  const below=team.filter(t=>compStatus(t)==='Below').length;
+  const rows=team.slice().sort((a,b)=>b.salary-a.salary).map(t=>{ const b=bandOf(t); const st=compStatus(t);
+    return `<tr><td><span class="avatar">${initials(t.name)}</span>${t.name}<div style="font-size:11.5px;color:var(--muted);margin-left:42px">${t.title}</div></td>
+      <td><span class="pill gray">${levelOf(t)}</span></td><td>${inr(t.salary)}</td>
+      <td style="min-width:160px"><div style="display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted);margin-bottom:3px"><span>${inr(b.min)}</span><span>${inr(b.max)}</span></div><div class="rangebar"><div class="rangefill" style="width:${rangePen(t)}%"></div></div></td>
+      <td>${compaRatio(t).toFixed(2)}</td><td><span class="pill ${st==='In range'?'green':st==='Below'?'amber':'red'}">${st}</span></td></tr>`;
+  }).join('');
+  content.innerHTML=`
+    <div class="kpis" style="grid-template-columns:repeat(3,1fr)">
+      <div class="kpi"><div class="label">Team payroll</div><div class="val">${inr(total)}</div><div class="delta up">${team.length} reports</div></div>
+      <div class="kpi"><div class="label">Team avg salary</div><div class="val">${team.length?inr(Math.round(total/team.length)):'—'}</div></div>
+      <div class="kpi"><div class="label">Below range</div><div class="val">${below}</div><div class="delta ${below?'down':'up'}">${below?'flag to HR':'all in range'}</div></div>
+    </div>
+    <div class="panel"><div class="hd">Team compensation <span style="font-weight:500;color:var(--muted);font-size:12.5px">Pay changes are made by HR</span></div><div class="bd" style="padding:0">
+      <table><thead><tr><th>Employee</th><th>Level</th><th>Salary</th><th>Range position</th><th>Compa-ratio</th><th>Status</th></tr></thead><tbody>${rows||'<tr><td colspan=6 class="empty">No direct reports</td></tr>'}</tbody></table>
+    </div></div>`;
+}
+function vMHire(){
+  const e=meEmp(); setHeader('Hiring','Requisitions you are hiring for');
+  const myReqs=DB.reqs.filter(r=>r.hiringManager===e.name);
+  if(!myReqs.length){ content.innerHTML=`<div class="panel"><div class="bd"><div class="empty">No requisitions are assigned to you as hiring manager. In Admin view you can set a requisition’s hiring manager to ${e.name}.</div></div></div>`; return; }
+  content.innerHTML=myReqs.map(r=>{
+    const cands=DB.candidates.filter(c=>c.reqId===r.id&&c.stage!=='Rejected');
+    return `<div class="panel" style="margin-bottom:18px"><div class="hd"><span>${r.title} <span class="pill ${r.status==='Open'?'green':'gray'}" style="margin-left:6px">${r.status}</span></span><span style="font-weight:500;color:var(--muted);font-size:12.5px">${r.dept} · ${r.location} · ${r.openings} opening(s)</span></div>
+      <div class="bd">${cands.length?cands.map(c=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--line-2);font-size:13.5px"><span><span class="avatar">${initials(c.name)}</span>${c.name}</span><span><span class="stars">${c.rating?starStr(c.rating):''}</span> <span class="pill gray" style="margin-left:8px">${c.stage}</span></span></div>`).join(''):'<div class="empty" style="padding:20px">No active candidates yet</div>'}</div></div>`;
+  }).join('');
+}
+
+/* ============================================================
+   AI scoping per persona
+   ============================================================ */
+function selfSnapshot(){
+  const e=meEmp(); const rv=reviewFor(e.id);
+  return {
+    me:{ name:e.name, title:e.title, department:e.dept, location:e.location, manager:e.manager, hire_date:e.hire,
+      tenure_years:+((Date.now()-new Date(e.hire))/3.156e10).toFixed(1), current_salary_inr:e.salary },
+    time_off:{ balance_days:leaveBalance(e.name), used_days:18-leaveBalance(e.name),
+      requests:DB.leaves.filter(l=>l.emp===e.name).map(l=>({type:l.type,from:l.from,days:l.days,status:l.status})) },
+    performance:{ cycle:DB.perf.cycle.name, due:DB.perf.cycle.due, self_review:rv.self, manager_review:rv.mgr, my_rating:rv.rating,
+      goals:(DB.perf.goals||[]).filter(g=>g.empId===e.id).map(g=>({title:g.title,progress_pct:g.progress,status:g.status})) }
+  };
+}
+function teamSnapshot(){
+  const e=meEmp(); const team=teamOf(e.name);
+  return {
+    manager:e.name, team_size:team.length,
+    direct_reports:team.map(t=>{ const rv=reviewFor(t.id);
+      return { name:t.name, title:t.title, location:t.location, tenure_years:+((Date.now()-new Date(t.hire))/3.156e10).toFixed(1),
+        level:levelOf(t), salary_inr:t.salary, compa_ratio:+compaRatio(t).toFixed(2), comp_status:compStatus(t),
+        self_review:rv.self, manager_review:rv.mgr, rating:rv.rating,
+        pending_leave_days:DB.leaves.filter(l=>l.emp===t.name&&l.status==='Pending').reduce((s,l)=>s+l.days,0),
+        goals:(DB.perf.goals||[]).filter(g=>g.empId===t.id).map(g=>({title:g.title,progress_pct:g.progress,status:g.status})) }; }),
+    pending_approvals:teamPendingLeaves(e.name).map(l=>({employee:l.emp,type:l.type,days:l.days,from:l.from})),
+    my_requisitions:DB.reqs.filter(r=>r.hiringManager===e.name).map(r=>({title:r.title,status:r.status,openings:r.openings,
+      candidates:DB.candidates.filter(c=>c.reqId===r.id&&c.stage!=='Rejected').length}))
+  };
+}
+function buildAISystem(){
+  if(ROLE==='admin') return AI_SYSTEM;
+  const e=meEmp(); const today=new Date().toISOString().slice(0,10);
+  const common=`You are the NayaHR assistant inside an HRIS. Salaries are annual INR — show money in lakhs (₹X.XL) or crores. Today is ${today}. Be concise and lead with the answer. Do not use tools; answer ONLY from the JSON context below.`;
+  if(ROLE==='employee')
+    return common+`\n\nYou are helping ${e.name} (${e.title}, ${e.dept}) in EMPLOYEE self-service. You may only discuss THIS person's own information. If asked about other employees, others' salaries, or company-wide analytics, briefly say that isn't available in employee self-service. Their data:\n`+JSON.stringify(selfSnapshot());
+  return common+`\n\nYou are helping ${e.name} (${e.title}) in MANAGER self-service. You may discuss ${e.name} and their direct reports only — not the wider organisation. Their team data:\n`+JSON.stringify(teamSnapshot());
+}
+function aiTools(){ return ROLE==='admin' ? TOOLS : undefined; }
+function aiChipset(){
+  if(ROLE==='employee') return ['How many leave days do I have left?','When is my review due?','What are my goals?'];
+  if(ROLE==='manager') return ['Who on my team needs a review?','Any leave to approve?','My team\'s average rating?'];
+  return ['Compare avg salary by location','Which dept has highest attrition?','Top 5 earners','Pending leave by department'];
+}
+function initAIChips(){ const el=document.getElementById('aiChips'); if(!el) return; el.innerHTML=aiChipset().map(c=>`<span class="chip">${c}</span>`).join(''); el.querySelectorAll('.chip').forEach(c=>c.onclick=()=>aiAsk(c.textContent)); }
+function aiGreeting(){
+  if(ROLE==='employee') return `Hi ${meEmp().name.split(' ')[0]}! Ask me about your leave, profile, goals, or review.`;
+  if(ROLE==='manager') return `Hi ${meEmp().name.split(' ')[0]}! Ask about your team — approvals, reviews, ratings, or hiring.`;
+  return `Hi! I'm your NayaHR assistant. Ask me anything about your people data.`;
+}
+
+/* ============================================================
+   Real AI: Claude API (via local proxy) with client-side tools
+   over the live localStorage DB. The proxy holds the API key;
+   the employee data never leaves the browser. If the proxy isn't
+   running (e.g. file:// open), we fall back to answer() above.
+   ============================================================ */
+const AI_MODEL='claude-opus-4-8';
+let AI_HISTORY=[];          // running messages array (multi-turn)
+let AI_BUSY=false;
+
+const AI_SYSTEM=`You are the NayaHR assistant, an AI embedded inside NayaHR — an HRIS used by a small/medium company. You help HR staff and managers get answers from the live employee database using the provided tools.
+
+Rules:
+- Always use the tools to get real numbers. Never invent or estimate figures.
+- Salaries are stored as ANNUAL amounts in Indian Rupees (INR). Present money in lakhs (₹X.XL = 100,000) or crores (₹X.XCr = 10,000,000), whichever reads better.
+- Today's date is ${new Date().toISOString().slice(0,10)}.
+- Be concise and specific. Lead with the answer. Use a short list or tiny table when comparing groups.
+- "Headcount" and salary metrics refer to ACTIVE employees unless the user clearly asks about terminated or all records.
+- The data model is effective-dated: get_employee_detail returns each person's dated history (hires, comp changes, promotions, terminations).
+- The Recruitment module tracks job requisitions and a candidate pipeline (stages: Applied → Screening → Interview → Offer → Hired, plus Rejected). Use recruiting_overview, get_requisitions, and get_candidates for any hiring questions.
+- The Talent & Performance module tracks a review cycle (self-review + manager-review status, 1–5 ratings) and employee goals (progress %, status On track / At risk / Done). Use performance_overview, get_reviews, and get_goals for review, rating, or goal questions.
+- The Compensation module defines pay bands (Associate / Senior / Manager / Leadership, each with min/mid/max) and computes compa-ratio (salary ÷ band mid) and range position; it flags employees below or above their band. Use comp_overview and comp_outliers for pay, payroll, band, or compa-ratio questions.
+- If a question is outside the HR data, say so briefly. Respond only with your final answer — no exploratory reasoning.`;
+
+const TOOLS=[
+  { name:'aggregate_metric',
+    description:'Compute an HR metric over the live employee database. Use for counts, average/min/max/median/total salary, average tenure, attrition, and new hires. Optionally break down by a dimension and/or filter.',
+    input_schema:{type:'object',properties:{
+      metric:{type:'string',enum:['headcount','avg_salary','min_salary','max_salary','median_salary','total_salary','avg_tenure_years','attrition_rate_12m','new_hires_90d'],description:'Which metric to compute.'},
+      group_by:{type:'string',enum:['dept','location','title','status'],description:'Optional dimension to break the metric down by.'},
+      filters:{type:'object',description:'Optional filters.',properties:{
+        dept:{type:'string',enum:DEPTS},
+        location:{type:'string',enum:LOCS},
+        status:{type:'string',enum:['Active','Terminated']},
+        title_contains:{type:'string'}
+      }}
+    },required:['metric']}},
+  { name:'query_employees',
+    description:'List individual employees matching filters (up to 50 rows). Use when the user wants names or specific people rather than an aggregate.',
+    input_schema:{type:'object',properties:{
+      dept:{type:'string',enum:DEPTS},
+      location:{type:'string',enum:LOCS},
+      status:{type:'string',enum:['Active','Terminated']},
+      title_contains:{type:'string'},
+      name_contains:{type:'string'},
+      manager:{type:'string',description:'Filter to direct reports of this manager (by name).'},
+      sort_by:{type:'string',enum:['salary_desc','salary_asc','tenure_desc','hire_desc'],description:'Optional sort order.'},
+      limit:{type:'integer',description:'Max rows (default 50, capped at 50).'}
+    }}},
+  { name:'get_employee_detail',
+    description:"Get one employee's full profile including effective-dated history (hire, comp changes, promotions, termination). Use for a single person or 'show history of X'.",
+    input_schema:{type:'object',properties:{name:{type:'string',description:'Full or partial employee name.'}},required:['name']}},
+  { name:'get_leaves',
+    description:'List leave / time-off requests. Filter by status, department, or type.',
+    input_schema:{type:'object',properties:{
+      status:{type:'string',enum:['Pending','Approved']},
+      dept:{type:'string',enum:DEPTS},
+      type:{type:'string',enum:['Annual','Sick','Casual','Work from home']}
+    }}},
+  { name:'company_overview',
+    description:'Snapshot of top-line HR metrics: headcount, total records, attrition, average tenure, new hires in 90 days, pending leaves, and headcount by department.',
+    input_schema:{type:'object',properties:{}}},
+  { name:'recruiting_overview',
+    description:'Snapshot of recruitment: open requisitions, open positions, candidates in pipeline, count by stage, offers out, total hired, and average time-to-hire in days.',
+    input_schema:{type:'object',properties:{}}},
+  { name:'get_requisitions',
+    description:'List job requisitions, optionally filtered by status or department. Includes the live candidate count per requisition.',
+    input_schema:{type:'object',properties:{
+      status:{type:'string',enum:['Open','On hold','Closed']},
+      dept:{type:'string',enum:DEPTS}
+    }}},
+  { name:'get_candidates',
+    description:'List candidates in the recruitment pipeline. Filter by stage, department, requisition title, or name.',
+    input_schema:{type:'object',properties:{
+      stage:{type:'string',enum:['Applied','Screening','Interview','Offer','Hired','Rejected']},
+      dept:{type:'string',enum:DEPTS},
+      req_title_contains:{type:'string'},
+      name_contains:{type:'string'}
+    }}},
+  { name:'performance_overview',
+    description:'Snapshot of the performance review cycle: cycle name & due date, manager-review completion %, self-reviews submitted, average rating, rating distribution (1–5), and goal counts (on track / at risk / done).',
+    input_schema:{type:'object',properties:{}}},
+  { name:'get_reviews',
+    description:'List employee performance reviews. Filter by manager-review status, self-review status, department, or minimum rating.',
+    input_schema:{type:'object',properties:{
+      manager_status:{type:'string',enum:['Not started','In progress','Completed']},
+      self_status:{type:'string',enum:['Not started','Submitted']},
+      dept:{type:'string',enum:DEPTS},
+      min_rating:{type:'integer',description:'Only reviews with a rating >= this (1–5).'}
+    }}},
+  { name:'get_goals',
+    description:'List employee goals. Filter by status, department, or employee name.',
+    input_schema:{type:'object',properties:{
+      status:{type:'string',enum:['On track','At risk','Done']},
+      dept:{type:'string',enum:DEPTS},
+      name_contains:{type:'string'}
+    }}},
+  { name:'comp_overview',
+    description:'Compensation snapshot: total annual payroll, average & median salary, the pay bands (Associate/Senior/Manager/Leadership with min/mid/max), headcount and average compa-ratio per band, and counts of employees below or above their range.',
+    input_schema:{type:'object',properties:{}}},
+  { name:'comp_outliers',
+    description:'List employees whose salary is below their band minimum or above their band maximum. Optionally filter to only "below" or only "above".',
+    input_schema:{type:'object',properties:{ which:{type:'string',enum:['below','above']} }}}
+];
+
+/* ---- client-side tool execution over DB ---- */
+function tenureYears(e){ return (Date.now()-new Date(e.hire))/3.156e10; }
+function median(arr){ if(!arr.length)return 0; const s=[...arr].sort((a,b)=>a-b); const m=Math.floor(s.length/2); return s.length%2?s[m]:(s[m-1]+s[m])/2; }
+function applyFilters(list,f){ f=f||{}; return list.filter(e=>
+  (!f.dept||e.dept===f.dept)&&(!f.location||e.location===f.location)&&
+  (!f.status||e.status===f.status)&&
+  (!f.title_contains||e.title.toLowerCase().includes(f.title_contains.toLowerCase()))); }
+
+function runTool(name,input){
+  input=input||{};
+  if(name==='company_overview'){
+    return { headcount:headcount(), total_records:DB.emps.length, attrition_12m_pct:+attrition12m().toFixed(1),
+      avg_tenure_years:+avgTenureYears().toFixed(1), new_hires_90d:newHires90d(), pending_leaves:pendingLeaves(),
+      headcount_by_dept:byDept() };
+  }
+  if(name==='recruiting_overview'){
+    const byStage={}; STAGES.concat('Rejected').forEach(s=>byStage[s]=DB.candidates.filter(c=>c.stage===s).length);
+    return { open_requisitions:DB.reqs.filter(r=>r.status==='Open').length,
+      open_positions:DB.reqs.filter(r=>r.status==='Open').reduce((s,r)=>s+r.openings,0),
+      candidates_in_pipeline:pipelineCands().length, candidates_by_stage:byStage,
+      offers_out:byStage.Offer, total_hired:byStage.Hired, avg_time_to_hire_days:avgTimeToHire() };
+  }
+  if(name==='get_requisitions'){
+    let l=DB.reqs.slice();
+    if(input.status) l=l.filter(r=>r.status===input.status);
+    if(input.dept) l=l.filter(r=>r.dept===input.dept);
+    return { count:l.length, requisitions:l.map(r=>({title:r.title,dept:r.dept,location:r.location,
+      openings:r.openings,status:r.status,hiring_manager:r.hiringManager,opened:r.opened,
+      candidates:DB.candidates.filter(c=>c.reqId===r.id&&c.stage!=='Rejected').length})) };
+  }
+  if(name==='get_candidates'){
+    let l=DB.candidates.slice();
+    if(input.stage) l=l.filter(c=>c.stage===input.stage);
+    if(input.dept) l=l.filter(c=>{const r=reqById(c.reqId);return r&&r.dept===input.dept;});
+    if(input.req_title_contains) l=l.filter(c=>{const r=reqById(c.reqId);return r&&r.title.toLowerCase().includes(input.req_title_contains.toLowerCase());});
+    if(input.name_contains) l=l.filter(c=>c.name.toLowerCase().includes(input.name_contains.toLowerCase()));
+    return { count:l.length, candidates:l.slice(0,50).map(c=>{const r=reqById(c.reqId);
+      return {name:c.name,stage:c.stage,role:r?r.title:null,dept:r?r.dept:null,rating:c.rating,applied:c.appliedDate,source:c.source};}) };
+  }
+  if(name==='performance_overview'){
+    const s=perfSummary();
+    return { cycle:DB.perf.cycle.name, due:DB.perf.cycle.due,
+      manager_review_completion_pct:s.completionPct, reviews_completed:s.done, employees:s.total,
+      self_reviews_submitted:s.selfIn, avg_rating:s.avgRating, rating_distribution:s.dist,
+      goals_on_track:s.goalsOnTrack, goals_at_risk:s.goalsAtRisk, goals_done:s.goalsDone };
+  }
+  if(name==='get_reviews'){
+    let l=active().map(e=>({e, r:reviewFor(e.id)}));
+    if(input.manager_status) l=l.filter(x=>x.r.mgr===input.manager_status);
+    if(input.self_status) l=l.filter(x=>x.r.self===input.self_status);
+    if(input.dept) l=l.filter(x=>x.e.dept===input.dept);
+    if(input.min_rating) l=l.filter(x=>x.r.rating&&x.r.rating>=input.min_rating);
+    return { count:l.length, reviews:l.slice(0,80).map(x=>({employee:x.e.name,dept:x.e.dept,
+      self_review:x.r.self,manager_review:x.r.mgr,rating:x.r.rating})) };
+  }
+  if(name==='get_goals'){
+    let l=(DB.perf.goals||[]).map(g=>({g, e:DB.emps.find(x=>x.id===g.empId)}));
+    if(input.status) l=l.filter(x=>x.g.status===input.status);
+    if(input.dept) l=l.filter(x=>x.e&&x.e.dept===input.dept);
+    if(input.name_contains) l=l.filter(x=>x.e&&x.e.name.toLowerCase().includes(input.name_contains.toLowerCase()));
+    return { count:l.length, goals:l.map(x=>({title:x.g.title,owner:x.e?x.e.name:null,
+      dept:x.e?x.e.dept:null,progress_pct:x.g.progress,status:x.g.status})) };
+  }
+  if(name==='comp_overview'){
+    const act=active(); const total=act.reduce((s,e)=>s+e.salary,0);
+    const bands={}; BAND_ORDER.forEach(l=>{ const inb=act.filter(e=>levelOf(e)===l);
+      bands[l]={min:BANDS[l].min,mid:BANDS[l].mid,max:BANDS[l].max,people:inb.length,
+        avg_compa_ratio:inb.length?+(inb.reduce((s,e)=>s+compaRatio(e),0)/inb.length).toFixed(2):null}; });
+    return { annual_payroll_inr:total, average_salary_inr:Math.round(total/act.length),
+      median_salary_inr:Math.round(median(act.map(e=>e.salary))), bands,
+      below_range:act.filter(e=>compStatus(e)==='Below').length, above_range:act.filter(e=>compStatus(e)==='Above').length };
+  }
+  if(name==='comp_outliers'){
+    let l=active().filter(e=>compStatus(e)!=='In range');
+    if(input.which==='below') l=l.filter(e=>compStatus(e)==='Below');
+    if(input.which==='above') l=l.filter(e=>compStatus(e)==='Above');
+    return { count:l.length, employees:l.map(e=>({name:e.name,dept:e.dept,title:e.title,level:levelOf(e),
+      salary_inr:e.salary,band_min:bandOf(e).min,band_max:bandOf(e).max,compa_ratio:+compaRatio(e).toFixed(2),status:compStatus(e)})) };
+  }
+  if(name==='get_leaves'){
+    let l=DB.leaves.slice();
+    if(input.status) l=l.filter(x=>x.status===input.status);
+    if(input.dept) l=l.filter(x=>x.dept===input.dept);
+    if(input.type) l=l.filter(x=>x.type===input.type);
+    return { count:l.length, leaves:l.map(x=>({employee:x.emp,dept:x.dept,type:x.type,from:x.from,days:x.days,status:x.status})) };
+  }
+  if(name==='get_employee_detail'){
+    const q=(input.name||'').toLowerCase().trim();
+    const e=DB.emps.find(x=>x.name.toLowerCase()===q)||DB.emps.find(x=>x.name.toLowerCase().includes(q));
+    if(!e) return {error:`No employee found matching "${input.name}".`};
+    return { name:e.name,dept:e.dept,title:e.title,email:e.email,location:e.location,status:e.status,
+      hire_date:e.hire,termination_date:e.termDate,current_salary_inr:e.salary,manager:e.manager,
+      tenure_years:+tenureYears(e).toFixed(1),
+      effective_dated_history:e.history.map(h=>({date:h.date,type:h.type,detail:h.detail,salary_inr:h.sal})) };
+  }
+  if(name==='query_employees'){
+    let l=applyFilters(DB.emps,{dept:input.dept,location:input.location,status:input.status,title_contains:input.title_contains});
+    if(input.name_contains) l=l.filter(e=>e.name.toLowerCase().includes(input.name_contains.toLowerCase()));
+    if(input.manager) l=l.filter(e=>(e.manager||'').toLowerCase().includes(input.manager.toLowerCase()));
+    const sorts={salary_desc:(a,b)=>b.salary-a.salary,salary_asc:(a,b)=>a.salary-b.salary,
+      tenure_desc:(a,b)=>new Date(a.hire)-new Date(b.hire),hire_desc:(a,b)=>new Date(b.hire)-new Date(a.hire)};
+    if(input.sort_by&&sorts[input.sort_by]) l.sort(sorts[input.sort_by]);
+    const lim=Math.min(input.limit||50,50);
+    return { matched:l.length, showing:Math.min(l.length,lim),
+      employees:l.slice(0,lim).map(e=>({name:e.name,dept:e.dept,title:e.title,location:e.location,status:e.status,salary_inr:e.salary,hire_date:e.hire,manager:e.manager})) };
+  }
+  if(name==='aggregate_metric'){
+    const base=applyFilters(DB.emps,input.filters);
+    const compute=rows=>{
+      const act=rows.filter(e=>e.status==='Active');
+      switch(input.metric){
+        case 'headcount': return act.length;
+        case 'avg_salary': return act.length?Math.round(act.reduce((s,e)=>s+e.salary,0)/act.length):0;
+        case 'min_salary': return act.length?Math.min(...act.map(e=>e.salary)):0;
+        case 'max_salary': return act.length?Math.max(...act.map(e=>e.salary)):0;
+        case 'median_salary': return Math.round(median(act.map(e=>e.salary)));
+        case 'total_salary': return act.reduce((s,e)=>s+e.salary,0);
+        case 'avg_tenure_years': return act.length?+(act.reduce((s,e)=>s+tenureYears(e),0)/act.length).toFixed(1):0;
+        case 'new_hires_90d': return rows.filter(e=>e.hire>=daysAgo(90)).length;
+        case 'attrition_rate_12m':{ const leavers=rows.filter(e=>e.termDate&&e.termDate>=daysAgo(365)).length;
+          const denom=act.length+leavers; return denom?+((leavers/denom)*100).toFixed(1):0; }
+        default: return null;
+      }
+    };
+    if(input.group_by){
+      const groups={}; base.forEach(e=>{ const k=e[input.group_by]; (groups[k]=groups[k]||[]).push(e); });
+      const out={}; Object.keys(groups).sort().forEach(k=>out[k]=compute(groups[k]));
+      return { metric:input.metric, group_by:input.group_by, results:out };
+    }
+    return { metric:input.metric, value:compute(base) };
+  }
+  return {error:`Unknown tool: ${name}`};
+}
+
+/* ---- streaming agentic loop: stream text token-by-token, run tools, repeat ---- */
+async function claudeStream(botEl){
+  let shownText='';
+  for(let iter=0; iter<6; iter++){
+    const res=await fetch('/api/claude',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ model:AI_MODEL, max_tokens:4096, thinking:{type:'disabled'}, system:buildAISystem(), tools:aiTools(), messages:AI_HISTORY, stream:true })});
+    if(!res.ok) throw new Error('API '+res.status+': '+(await res.text()).slice(0,200));
+    const reader=res.body.getReader(); const dec=new TextDecoder();
+    let buf='', blocks=[], stopReason=null;
+    while(true){
+      const {value,done}=await reader.read(); if(done) break;
+      buf+=dec.decode(value,{stream:true});
+      let nl;
+      while((nl=buf.indexOf('\n'))>=0){
+        const line=buf.slice(0,nl).trim(); buf=buf.slice(nl+1);
+        if(!line.startsWith('data:')) continue;
+        let ev; try{ ev=JSON.parse(line.slice(5).trim()); }catch(_){ continue; }
+        if(ev.type==='content_block_start'){ blocks[ev.index]={type:ev.content_block.type,text:'',id:ev.content_block.id,name:ev.content_block.name,json:''}; }
+        else if(ev.type==='content_block_delta'){ const d=ev.delta;
+          if(d.type==='text_delta'){ blocks[ev.index].text+=d.text; shownText+=d.text; botEl.innerHTML=mdLite(shownText)+'<span class="cursor">▍</span>'; aiBody.scrollTop=aiBody.scrollHeight; }
+          else if(d.type==='input_json_delta'){ blocks[ev.index].json+=d.partial_json; } }
+        else if(ev.type==='message_delta'){ if(ev.delta&&ev.delta.stop_reason) stopReason=ev.delta.stop_reason; }
+        else if(ev.type==='error'){ throw new Error((ev.error&&ev.error.message)||'stream error'); }
+      }
+    }
+    const cont=blocks.filter(Boolean).map(b=> b.type==='tool_use'
+      ? {type:'tool_use',id:b.id,name:b.name,input:b.json?JSON.parse(b.json):{}}
+      : {type:'text',text:b.text});
+    AI_HISTORY.push({role:'assistant',content:cont});
+    if(stopReason==='tool_use'){
+      const results=cont.filter(b=>b.type==='tool_use').map(b=>({type:'tool_result',tool_use_id:b.id,content:JSON.stringify(runTool(b.name,b.input))}));
+      AI_HISTORY.push({role:'user',content:results});
+      continue;
+    }
+    botEl.innerHTML=mdLite(shownText.trim())||'I could not produce an answer for that.';
+    return;
+  }
+  botEl.innerHTML=mdLite(shownText.trim())||'Sorry — that took too many steps. Try narrowing the question.';
+}
+
+/* ---- markdown-lite + escaping for chat bubbles ---- */
+function escapeHtml(s){ return s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+function mdLite(s){ return escapeHtml(s)
+  .replace(/\*\*(.+?)\*\*/g,'<b>$1</b>')
+  .replace(/`(.+?)`/g,'<code>$1</code>')
+  .replace(/^\s*[-*]\s+/gm,'• ')
+  .replace(/\n/g,'<br>'); }
+
+async function aiAsk(q){
+  if(!q.trim()||AI_BUSY) return;
+  aiMsg(escapeHtml(q),'me');
+  const snap=AI_HISTORY.length;               // rollback point on failure
+  AI_HISTORY.push({role:'user',content:q});
+  AI_BUSY=true;
+  const bot=document.createElement('div'); bot.className='msg bot';
+  bot.innerHTML='<span style="opacity:.6">●●● thinking…</span>';
+  aiBody.appendChild(bot); aiBody.scrollTop=aiBody.scrollHeight;
+  try{
+    await claudeStream(bot);
+  }catch(err){
+    AI_HISTORY.length=snap;                    // keep history consistent for next real turn
+    bot.innerHTML=answer(q,true)+'<div style="margin-top:8px;font-size:12px;color:#8a93a6">⚠️ Offline answer — start the AI proxy (<code>node proxy.js</code> with your <code>ANTHROPIC_API_KEY</code>) for full Claude responses.</div>';
+  }finally{ AI_BUSY=false; }
+}
+document.getElementById('aiFab').onclick=()=>{ const p=document.getElementById('aiPanel'); p.classList.toggle('on'); if(p.classList.contains('on')&&!aiBody.children.length){ aiMsg(aiGreeting(),'bot'); } };
+document.getElementById('aiSend').onclick=()=>{ const i=document.getElementById('aiInput'); aiAsk(i.value); i.value=''; };
+document.getElementById('aiInput').onkeydown=e=>{ if(e.key==='Enter'){ aiAsk(e.target.value); e.target.value=''; } };
+
+/* Nav */
+document.getElementById('nav').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b)return; VIEW=b.dataset.view; render(); });
+document.getElementById('scrim').addEventListener('click',e=>{ if(e.target.id==='scrim') closeModal(); });
+
+/* Boot */
+load(); ROLE='admin'; ME=null; VIEW='dashboard';
+renderNav(); renderRoleSwitch(); initAIChips(); render();
+</script>
+</body>
+</html>

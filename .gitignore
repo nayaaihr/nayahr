@@ -1,0 +1,27 @@
+# Dependencies & build output (anywhere in the tree)
+node_modules/
+**/node_modules/
+.next/
+**/.next/
+dist/
+build/
+
+# Secrets & local env — never commit
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+
+# Dev-only session map (contains demo tenant/user ids)
+.dev-session.json
+**/.dev-session.json
+
+# OS / editor noise
+.DS_Store
+*.log
+.vercel/
+
+# Local Claude Code agent config
+.claude/

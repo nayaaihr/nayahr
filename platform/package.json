@@ -1,0 +1,33 @@
+{
+  "name": "nayahr-platform",
+  "version": "0.1.0",
+  "private": true,
+  "description": "NayaHR backend vertical slice — effective-dated Core HR on Postgres (NH-027)",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "db:migrate": "tsx scripts/migrate.ts",
+    "db:apply": "tsx scripts/apply.ts",
+    "seed": "tsx src/db/seed.ts",
+    "db:reset": "tsx scripts/migrate.ts && tsx src/db/seed.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.65.0",
+    "@clerk/nextjs": "^6.0.0",
+    "drizzle-orm": "^0.36.0",
+    "next": "^14.2.5",
+    "pg": "^8.12.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "@types/pg": "^8.11.6",
+    "@types/react": "^18.3.3",
+    "dotenv": "^16.4.5",
+    "drizzle-kit": "^0.28.0",
+    "tsx": "^4.16.0",
+    "typescript": "^5.5.3"
+  }
+}
