@@ -27,7 +27,8 @@ export type Role = "owner" | "hr_admin" | "manager" | "employee";
 export type Session = {
   tenantId: string;
   userId: string | null;
-  role: Role;
+  role: Role;            // effective role (may be a "view as" override)
+  realRole: Role;        // the user's true role (Owner can preview lower roles)
   workerId: string | null; // the worker this user IS (for self/team scoping)
 };
 

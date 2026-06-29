@@ -7,8 +7,8 @@ import { setDevRole } from "./dev-role-action";
 const ROLES = [
   { v: "owner", label: "Owner" },
   { v: "hr_admin", label: "HR Admin" },
-  { v: "manager", label: "Manager (Dhruv)" },
-  { v: "employee", label: "Employee (Pooja)" },
+  { v: "manager", label: "Manager" },
+  { v: "employee", label: "Employee" },
 ];
 
 export function DevSwitcher({ current }: { current: string }) {
@@ -16,7 +16,7 @@ export function DevSwitcher({ current }: { current: string }) {
   const router = useRouter();
   return (
     <div className="devsw">
-      <span className="devsw-lbl">Dev role {pending && "…"}</span>
+      <span className="devsw-lbl">View as {pending && "…"}</span>
       <select
         value={current}
         disabled={pending}

@@ -77,13 +77,14 @@ export async function getSession(): Promise<Session> {
 
   const appUser = claimed ?? (await provisionNewTenant(userId, email));
 
-  let role = appUser.role as Role;
+  const realRole = appUser.role as Role;
+  let role = realRole;
   let workerId = appUser.worker_id ?? null;
   const tenantId = appUser.tenant_id;
 
-  // DEV-ONLY scope testing on the seeded demo tenant. Role comes from the
-  // `dev_role` cookie (set by the in-app switcher), falling back to DEV_ROLE env.
   if (process.env.NODE_ENV !== "production") {
+    // DEV scope testing on the seeded demo tenant — `dev_role` cookie / DEV_ROLE env,
+    // worker ids from .dev-session.json.
     const ALLOWED: Role[] = ["owner", "hr_admin", "manager", "employee"];
     const cookieRole = cookies().get("dev_role")?.value as Role | undefined;
     const devRole =
@@ -99,7 +100,29 @@ export async function getSession(): Promise<Session> {
         }
       } catch { /* ignore */ }
     }
+  } else if (realRole === "owner") {
+    // PRODUCTION: an Owner may "view as" a lower role to preview the app. Downgrade
+    // only, and enforced here — a non-owner's cookie has no effect.
+    const viewAs = cookies().get("dev_role")?.value as Role | undefined;
+    if (viewAs && (["hr_admin", "manager", "employee"] as Role[]).includes(viewAs)) {
+      role = viewAs;
+      workerId = await pickSampleWorker(tenantId, viewAs);
+    }
   }
 
-  return { tenantId, userId: appUser.id, role, workerId };
+  return { tenantId, userId: appUser.id, role, realRole, workerId };
+}
+
+/** For an Owner previewing as manager/employee in production, pick a representative
+ *  worker so the team/self scope shows real data. */
+async function pickSampleWorker(tenantId: string, role: Role): Promise<string | null> {
+  if (role === "hr_admin") return null; // org scope — no worker needed
+  return db.transaction(async (tx) => {
+    await tx.execute(sql`select set_config('app.tenant', ${tenantId}, true)`);
+    const q = role === "manager"
+      ? sql`select manager_id as id from job_event where manager_id is not null limit 1`
+      : sql`select id from worker limit 1`;
+    const r = await tx.execute(q);
+    return ((r.rows as Array<{ id: string }>)[0]?.id) ?? null;
+  });
 }

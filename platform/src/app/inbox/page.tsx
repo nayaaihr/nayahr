@@ -5,8 +5,8 @@ import { InboxActions } from "./inbox-actions";
 
 export const dynamic = "force-dynamic";
 
-const ICON: Record<InboxItem["kind"], string> = { leave: "🌴", requisition: "📋", comp: "💰", review: "⭐", jobchange: "🧭" };
-const LABEL: Record<InboxItem["kind"], string> = { leave: "Time off", requisition: "Recruitment", comp: "Compensation", review: "Performance", jobchange: "Core HR" };
+const ICON: Record<InboxItem["kind"], string> = { leave: "🌴", requisition: "📋", comp: "💰", review: "⭐", jobchange: "🧭", goal: "🎯" };
+const LABEL: Record<InboxItem["kind"], string> = { leave: "Time off", requisition: "Recruitment", comp: "Compensation", review: "Performance", jobchange: "Core HR", goal: "Performance" };
 
 export default async function InboxPage() {
   const session = await getSession();

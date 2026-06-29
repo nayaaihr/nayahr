@@ -3,6 +3,7 @@ import { withSession, type Session } from "@/db/client";
 import { listPeople } from "@/repos/people";
 
 export const CYCLE = "H1 2026 Performance Review";
+export const GOAL_CYCLE = "FY 2026-27"; // performance year for goals (Indian financial year)
 export const STAGES = ["Self-review", "Manager review", "HR review", "Closed"] as const;
 
 export type Review = {
@@ -11,7 +12,7 @@ export type Review = {
   self_text: string | null; manager_comment: string | null; hr_comment: string | null;
   goals: number;
 };
-export type PerfGoal = { worker_id: string; owner: string; title: string; progress: number; status: string };
+export type PerfGoal = { id: string; worker_id: string; owner: string; title: string; progress: number; status: string; stage: string; cycle: string; manager_comment: string | null };
 export type PerfStats = {
   total: number; closed: number; completionPct: number; avgRating: number;
   awaitingSelf: number; awaitingMgr: number; awaitingHr: number;
@@ -30,7 +31,7 @@ export async function listPerformance(s: Session): Promise<{ rows: Review[]; goa
   const inList = sql.join(ids.map((id) => sql`${id}`), sql`, `);
   return withSession(s, async (tx) => {
     const rv = (await tx.execute(sql`select worker_id, self_status, mgr_status, hr_status, rating, stage, self_text, manager_comment, hr_comment from review where worker_id::text in (${inList})`)).rows as Array<Record<string, unknown>>;
-    const gl = (await tx.execute(sql`select worker_id, title, progress, status from goal where worker_id::text in (${inList})`)).rows as Array<Record<string, unknown>>;
+    const gl = (await tx.execute(sql`select id, worker_id, title, progress, status, stage, cycle, manager_comment from goal where worker_id::text in (${inList})`)).rows as Array<Record<string, unknown>>;
     const byWorker = new Map(rv.map((r) => [r.worker_id as string, r]));
     const goalsByWorker = new Map<string, number>();
     gl.forEach((g) => goalsByWorker.set(g.worker_id as string, (goalsByWorker.get(g.worker_id as string) ?? 0) + 1));
@@ -51,8 +52,9 @@ export async function listPerformance(s: Session): Promise<{ rows: Review[]; goa
       };
     });
     const goals: PerfGoal[] = gl.map((g) => ({
-      worker_id: g.worker_id as string, owner: nameById.get(g.worker_id as string) ?? "—",
+      id: g.id as string, worker_id: g.worker_id as string, owner: nameById.get(g.worker_id as string) ?? "—",
       title: g.title as string, progress: g.progress as number, status: g.status as string,
+      stage: (g.stage as string) ?? "Draft", cycle: (g.cycle as string) ?? GOAL_CYCLE, manager_comment: (g.manager_comment as string) ?? null,
     })).sort((a, b) => b.progress - a.progress);
 
     const rated = rows.filter((r) => r.rating != null).map((r) => r.rating as number);
@@ -109,6 +111,58 @@ export async function managerReview(s: Session, workerId: string, comment: strin
         stage = case when review.stage in ('Self-review','Manager review') then 'HR review' else review.stage end,
         updated_at = now()`);
     await audit(tx, s, "review_manager_approve", workerId, { rating });
+  });
+}
+
+// ── Goals lifecycle ─────────────────────────────────────────────────────────
+const audited = (tx: Parameters<Parameters<typeof withSession>[1]>[0], s: Session, action: string, id: string, after: unknown) =>
+  tx.execute(sql`insert into audit_log (tenant_id, actor_id, action, entity, entity_id, after) values (${s.tenantId}, ${s.userId}, ${action}, 'goal', ${id}, ${JSON.stringify(after)}::jsonb)`);
+
+/** Employee creates a goal for the performance year (starts as Draft). */
+export async function createGoal(s: Session, title: string): Promise<void> {
+  if (!s.workerId) throw new Error("Only an employee with a profile can set goals.");
+  if (!title.trim()) throw new Error("Goal title is required.");
+  const wid = s.workerId;
+  await withSession(s, async (tx) => {
+    const r = (await tx.execute(sql`insert into goal (tenant_id, worker_id, title, progress, status, cycle, stage)
+      values (${s.tenantId}, ${wid}, ${title.trim()}, 0, 'On track', ${GOAL_CYCLE}, 'Draft') returning id`)).rows as Array<{ id: string }>;
+    await audited(tx, s, "goal_create", r[0].id, { title: title.trim() });
+  });
+}
+
+/** Employee updates progress / status on their own goal. */
+export async function updateGoal(s: Session, goalId: string, progress: number, status: string): Promise<void> {
+  if (!s.workerId) throw new Error("Not authorized.");
+  await withSession(s, async (tx) => {
+    const res = await tx.execute(sql`update goal set progress = ${Math.max(0, Math.min(100, progress))}, status = ${status}
+      where id = ${goalId} and worker_id = ${s.workerId}`);
+    if (res.rowCount === 0) throw new Error("That isn't your goal.");
+  });
+}
+
+/** Employee submits a Draft/Rejected goal for manager evaluation. */
+export async function submitGoal(s: Session, goalId: string): Promise<void> {
+  if (!s.workerId) throw new Error("Not authorized.");
+  await withSession(s, async (tx) => {
+    const res = await tx.execute(sql`update goal set stage = 'Submitted', manager_comment = null
+      where id = ${goalId} and worker_id = ${s.workerId} and stage in ('Draft', 'Rejected')`);
+    if (res.rowCount === 0) throw new Error("This goal can't be submitted.");
+    await audited(tx, s, "goal_submit", goalId, {});
+  });
+}
+
+/** Manager (their team) or HR/Owner evaluates a submitted goal → Approved/Rejected. */
+export async function decideGoal(s: Session, goalId: string, approve: boolean, comment: string): Promise<void> {
+  if (s.role === "employee") throw new Error("Not authorized.");
+  await withSession(s, async (tx) => {
+    const g = (await tx.execute(sql`select worker_id from goal where id = ${goalId} and stage = 'Submitted' limit 1`)).rows as Array<{ worker_id: string }>;
+    if (!g[0]) throw new Error("This goal isn't awaiting evaluation.");
+    if (s.role === "manager") {
+      const team = new Set((await listPeople(s)).map((p) => p.worker_id));
+      if (!team.has(g[0].worker_id)) throw new Error("That goal isn't from your team.");
+    }
+    await tx.execute(sql`update goal set stage = ${approve ? "Approved" : "Rejected"}, manager_comment = ${comment.trim() || null} where id = ${goalId}`);
+    await audited(tx, s, approve ? "goal_approve" : "goal_reject", goalId, { comment: comment.trim().slice(0, 120) });
   });
 }
 

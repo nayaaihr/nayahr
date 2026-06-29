@@ -18,11 +18,14 @@ export const metadata: Metadata = {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   // Resolve role + company + inbox count (all fail gracefully when signed out).
   let role: string | null = null;
+  let canViewAs = false;
   let pending = 0;
   let company = { name: "NayaHR", logoUrl: null as string | null };
   try {
     const session = await getSession();
     role = session.role;
+    // Owner can preview lower roles in any env; everyone can in dev.
+    canViewAs = session.realRole === "owner" || process.env.NODE_ENV !== "production";
     [pending, company] = await Promise.all([inboxCount(session), getCompany(session)]);
   } catch { /* not signed in — auth pages render without the app shell */ }
   const canEditLogo = role === "owner" || role === "hr_admin";
@@ -39,7 +42,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 <SideNav role={role} inboxCount={pending} />
                 <div className="side-foot">
                   <ProfileChip />
-                  {process.env.NODE_ENV !== "production" && role && <DevSwitcher current={role} />}
+                  {canViewAs && role && <DevSwitcher current={role} />}
                   <UserButton showName />
                 </div>
               </aside>

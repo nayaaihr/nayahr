@@ -1,6 +1,7 @@
 import { getSession } from "@/lib/session";
-import { listPerformance, CYCLE } from "@/repos/perf";
+import { listPerformance, CYCLE, GOAL_CYCLE } from "@/repos/perf";
 import { ReviewButton } from "./review-drawer";
+import { MyGoals, GoalDecision } from "./goals";
 
 export const dynamic = "force-dynamic";
 
@@ -37,17 +38,8 @@ export default async function PerformPage() {
               </div>
             </div>
             <div className="panel">
-              <div className="panel-hd">My goals</div>
-              <div style={{ padding: 22 }}>
-                {myGoals.length === 0 ? <div style={{ color: "var(--muted)" }}>No goals assigned yet.</div> : myGoals.map((g, i) => (
-                  <div key={i} style={{ marginBottom: 14 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6, fontSize: 13 }}>
-                      <span style={{ fontWeight: 600 }}>{g.title}</span>{goalPill(g.status)}
-                    </div>
-                    <div className="rangebar"><div className="rangefill" style={{ width: g.progress + "%", background: g.status === "At risk" ? "var(--red)" : g.status === "Done" ? "var(--green)" : undefined }} /></div>
-                  </div>
-                ))}
-              </div>
+              <div className="panel-hd"><span>My goals</span><span className="badge">Performance year · {GOAL_CYCLE}</span></div>
+              <MyGoals goals={myGoals} />
             </div>
           </>
         ) : <div className="empty-cta"><h2>No review on file</h2><p>Your performance review for this cycle isn't set up yet.</p></div>
@@ -79,14 +71,22 @@ export default async function PerformPage() {
           </div>
 
           <div className="panel">
-            <div className="panel-hd">Goals <span className="badge">{goals.length}</span></div>
-            <div style={{ padding: 22, maxHeight: 360, overflow: "auto" }}>
-              {goals.length === 0 ? <div style={{ color: "var(--muted)" }}>No goals yet.</div> : goals.map((g, i) => (
-                <div key={i} style={{ marginBottom: 14 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6, fontSize: 13 }}>
-                    <span><span style={{ fontWeight: 600 }}>{g.title}</span> <span style={{ color: "var(--muted)" }}>· {g.owner}</span></span>{goalPill(g.status)}
+            <div className="panel-hd">
+              <span>Goals — team{goals.some((g) => g.stage === "Submitted") && <span className="badge">{goals.filter((g) => g.stage === "Submitted").length} to evaluate</span>}</span>
+              <span className="badge">Performance year · {GOAL_CYCLE}</span>
+            </div>
+            <div style={{ padding: 22, maxHeight: 420, overflow: "auto" }}>
+              {goals.length === 0 ? <div style={{ color: "var(--muted)" }}>No goals yet.</div> : goals.map((g) => (
+                <div key={g.id} style={{ marginBottom: 16, borderTop: "1px solid #f0f0f3", paddingTop: 12 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6, fontSize: 13, alignItems: "center" }}>
+                    <span><span style={{ fontWeight: 600 }}>{g.title}</span> <span style={{ color: "var(--muted)" }}>· {g.owner}</span></span>
+                    <span style={{ display: "inline-flex", gap: 6, alignItems: "center" }}>
+                      <span className={"pill " + (g.stage === "Approved" ? "green" : g.stage === "Rejected" ? "red" : g.stage === "Submitted" ? "amber" : "")}>{g.stage}</span>
+                      {goalPill(g.status)}
+                    </span>
                   </div>
                   <div className="rangebar"><div className="rangefill" style={{ width: g.progress + "%", background: g.status === "At risk" ? "var(--red)" : g.status === "Done" ? "var(--green)" : undefined }} /></div>
+                  {g.stage === "Submitted" && <div style={{ marginTop: 8 }}><GoalDecision goalId={g.id} /></div>}
                 </div>
               ))}
             </div>

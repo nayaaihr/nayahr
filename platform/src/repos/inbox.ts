@@ -8,7 +8,7 @@ import { listPendingJobChanges } from "@/repos/worker-detail";
 import { rupee } from "@/lib/salary";
 
 export type InboxItem = {
-  kind: "leave" | "requisition" | "comp" | "review" | "jobchange";
+  kind: "leave" | "requisition" | "comp" | "review" | "jobchange" | "goal";
   id: string;                                       // entity id the action operates on
   action: "approve_reject" | "acknowledge" | "link"; // inline controls to render
   title: string;
@@ -56,6 +56,11 @@ export async function inboxItems(s: Session): Promise<InboxItem[]> {
     perf.rows.filter((r) => r.stage === "HR review").forEach((r) =>
       items.push({ kind: "review", id: r.worker_id, action: "acknowledge", title: `Review — ${r.name}`, subtitle: "HR acknowledgement due", href: "/perform" }));
   }
+  // Goal evaluations — managers (their team) and HR/owner.
+  if (s.role === "manager" || isApprover) {
+    perf.goals.filter((g) => g.stage === "Submitted").forEach((g) =>
+      items.push({ kind: "goal", id: g.id, action: "approve_reject", title: `Goal — ${g.owner}`, subtitle: `Evaluate: “${g.title}”`, href: "/perform" }));
+  }
 
   return items;
 }
@@ -81,7 +86,8 @@ export async function inboxCount(s: Session): Promise<number> {
             (select count(*) from requisition where status = 'Pending approval') +
             (select count(*) from comp_change_request where status = 'Pending') +
             (select count(*) from job_change_request where req_status = 'Pending') +
-            (select count(*) from review where stage = 'HR review')
+            (select count(*) from review where stage = 'HR review') +
+            (select count(*) from goal where stage = 'Submitted')
           )::int n`)).rows as Array<{ n: number }>;
         total += r[0]?.n ?? 0;
       } else if (s.role === "manager" && s.workerId) {
@@ -95,7 +101,8 @@ export async function inboxCount(s: Session): Promise<number> {
           ), team as (select worker_id from latest where manager_id = ${s.workerId})
           select (
             (select count(*) from leave_request where status = 'Pending' and worker_id in (select worker_id from team)) +
-            (select count(*) from review where stage = 'Manager review' and worker_id in (select worker_id from team) and worker_id <> ${s.workerId})
+            (select count(*) from review where stage = 'Manager review' and worker_id in (select worker_id from team) and worker_id <> ${s.workerId}) +
+            (select count(*) from goal where stage = 'Submitted' and worker_id in (select worker_id from team))
           )::int n`)).rows as Array<{ n: number }>;
         total += r[0]?.n ?? 0;
       }
