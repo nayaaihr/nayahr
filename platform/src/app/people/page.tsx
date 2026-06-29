@@ -23,6 +23,7 @@ export default async function PeoplePage() {
   const people = await listPeople(session);
   const today = new Date().toISOString().slice(0, 10);
   const canAdd = session.role === "hr_admin" || session.role === "owner";
+  const showEmail = session.role !== "employee"; // owner / hr_admin / manager
   const ref = canAdd ? await listRefData(session) : { departments: [], locations: [] };
   const access = canAdd ? await listAccess(session) : new Map();
 
@@ -57,7 +58,7 @@ export default async function PeoplePage() {
         <table>
           <thead>
             <tr>
-              <th>Name</th><th>Title</th><th>Manager</th><th>Department</th><th>Location</th><th>Status</th><th>Tenure</th><th>Salary</th>{canAdd && <th>Portal access</th>}
+              <th>Name</th>{showEmail && <th>Email</th>}<th>Title</th><th>Manager</th><th>Department</th><th>Location</th><th>Status</th><th>Tenure</th><th>Salary</th>{canAdd && <th>Portal access</th>}
             </tr>
           </thead>
           <tbody>
@@ -67,6 +68,7 @@ export default async function PeoplePage() {
                   <span className="av">{p.photo_url ? <img src={p.photo_url} alt="" /> : initials(p.full_name)}</span>
                   {p.full_name}
                 </td>
+                {showEmail && <td>{p.email ? <a href={`mailto:${p.email}`} style={{ color: "var(--brand)" }}>{p.email}</a> : <span style={{ color: "var(--muted)" }}>—</span>}</td>}
                 <td>{p.title}</td>
                 <td style={{ color: p.manager_name ? undefined : "var(--muted)" }}>{p.manager_name ?? "—"}</td>
                 <td><span className="pill">{p.department}</span></td>
