@@ -51,7 +51,10 @@ Your code connects to any Postgres via `DATABASE_URL`. Pick one:
 **Option A — Neon paid (simplest; verified working with our row-level security).** Region: Singapore (closest to India; Neon has no Mumbai yet).
 **Option B — India residency: AWS RDS Postgres `ap-south-1 (Mumbai)` or Supabase (Mumbai).** Required before storing real customer data long-term.
 
-> 🔒 **Critical for tenant isolation:** the app must connect as a Postgres role that does **NOT** bypass row-level security (i.e. not a superuser). Neon's default role is fine. On RDS/Supabase, **create a dedicated non-superuser role** for the app and use that in `DATABASE_URL`, or tenant isolation can silently break. (Test it — see Step 7.)
+> 🔒 **Critical for tenant isolation — verified 2026-06-30:** Neon's default `neondb_owner` role has **`BYPASSRLS`**, which silently disables Row-Level Security *even with FORCE*. The app must connect as a **separate role that does NOT bypass RLS**, or every signed-in user can read all tenants' data. Set up:
+> 1. **Neon Console → Roles → New Role**, name it exactly **`nayahr_app`** (Neon generates a password + connection string).
+> 2. Grant it privileges (run as the owner): `DATABASE_URL="<owner DIRECT url>" npm run db:apply -- sql/0015_app_role_grants.sql`
+> 3. In Vercel set **`APP_DATABASE_URL`** = the **`nayahr_app` pooled** connection string. The app prefers `APP_DATABASE_URL`; `DATABASE_URL` (owner) is used only for migrations. Verify with the isolation test in Step 7.
 
 **Create the schema on the prod DB** (run from your laptop, pointing at the prod connection string — use the **direct/unpooled** string for this):
 ```bash

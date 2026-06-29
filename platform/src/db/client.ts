@@ -10,11 +10,15 @@ import { sql } from "drizzle-orm";
 // at a time) and point DATABASE_URL at a connection-pooled endpoint in
 // production (e.g. Neon's `-pooler` host, PgBouncer transaction mode — which is
 // compatible with our transaction-scoped `set_config`).
+// The APP must connect as a role that does NOT bypass RLS (Neon's default
+// `neondb_owner` has BYPASSRLS, which silently disables tenant isolation). Use
+// APP_DATABASE_URL (the dedicated `nayahr_app` role) for the app; migrations keep
+// using DATABASE_URL (the owner role). Falls back to DATABASE_URL if unset.
 const globalForPool = globalThis as unknown as { _nayahrPool?: Pool };
 export const pool =
   globalForPool._nayahrPool ??
   new Pool({
-    connectionString: process.env.DATABASE_URL,
+    connectionString: process.env.APP_DATABASE_URL ?? process.env.DATABASE_URL,
     max: Number(process.env.PG_POOL_MAX ?? 5),
     idleTimeoutMillis: 30_000,
     connectionTimeoutMillis: 10_000,
