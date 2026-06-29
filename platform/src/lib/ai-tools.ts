@@ -55,6 +55,7 @@ export const TOOLS = [
         department: { type: "string" },
         location: { type: "string", description: "e.g. Zurich, Bengaluru" },
         openings: { type: "number", description: "Number of positions (default 1)" },
+        description: { type: "string", description: "Free-text notes about the role (context, must-have skills, why hiring)" },
       },
       required: ["title"],
     },
@@ -186,6 +187,7 @@ export async function runTool(name: string, input: Record<string, unknown>, s: S
       await createRequisition(s, {
         title: String(input.title), department: input.department ? String(input.department) : null,
         location: input.location ? String(input.location) : null, openings: Number(input.openings) || 1,
+        description: input.description ? String(input.description) : null,
       });
       return { ok: true, message: `Requisition "${input.title}" created${s.role === "manager" ? " and sent to HR for approval" : " and opened"}.` };
     } catch (e) { return fail(e); }

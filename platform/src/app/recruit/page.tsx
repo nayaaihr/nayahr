@@ -57,7 +57,10 @@ export default async function RecruitPage() {
               <tr><td colSpan={showReqActions ? 7 : 6} style={{ padding: 32, textAlign: "center", color: "var(--muted)" }}>No requisitions.</td></tr>
             ) : reqs.map((r) => (
               <tr key={r.id}>
-                <td style={{ fontWeight: 600 }}>{r.title}</td>
+                <td style={{ fontWeight: 600 }}>
+                  {r.title}
+                  {r.description && <div style={{ fontWeight: 400, fontSize: 11.5, color: "var(--muted)", marginTop: 2, maxWidth: 320, whiteSpace: "normal", lineHeight: 1.4 }}>{r.description}</div>}
+                </td>
                 <td>{r.department ? <span className="pill">{r.department}</span> : "—"}</td>
                 <td>{r.location ?? "—"}</td>
                 <td>{r.openings}</td>

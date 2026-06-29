@@ -74,6 +74,11 @@ tr:last-child td { border-bottom: 0; }
 .inbox-title { font-size: 13.5px; font-weight: 600; }
 .inbox-sub { font-size: 12px; color: var(--muted); }
 .inbox-go { color: var(--muted); font-size: 16px; }
+.auth-shell { min-height: 100vh; display: grid; place-items: center; padding: 40px 20px; background: var(--bg); }
+.brand-img { max-height: 42px; max-width: 184px; object-fit: contain; display: block; }
+.brand-edit { margin-left: auto; background: none; border: 1px solid #e3e3e8; border-radius: 8px; padding: 3px 8px; font-size: 11px; color: var(--muted); cursor: pointer; white-space: nowrap; }
+.brand-edit:hover:not(:disabled) { color: var(--brand); border-color: var(--brand); }
+.brand-edit:disabled { opacity: .6; cursor: default; }
 .profilechip { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
 .avatar-btn { position: relative; width: 42px; height: 42px; border-radius: 50%; border: 0; padding: 0; cursor: pointer; background: var(--brand); overflow: visible; flex: none; }
 .avatar-btn img { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; display: block; }

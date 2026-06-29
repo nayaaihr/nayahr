@@ -3,7 +3,7 @@ import { withSession, type Session } from "@/db/client";
 
 export const STAGES = ["Applied", "Screening", "Interview", "Offer", "Hired"] as const;
 
-export type Req = { id: string; title: string; department: string | null; location: string | null; openings: number; status: string; candidates: number };
+export type Req = { id: string; title: string; department: string | null; location: string | null; openings: number; status: string; description: string | null; candidates: number };
 export type Cand = { id: string; req_id: string; name: string; req_title: string; stage: string; rating: number | null; source: string | null };
 
 const canManage = (s: Session) => s.role === "owner" || s.role === "hr_admin"; // approves & runs the pipeline
@@ -12,7 +12,7 @@ const canCreate = (s: Session) => canManage(s) || s.role === "manager";        /
 export async function listRecruitment(s: Session): Promise<{ reqs: Req[]; cands: Cand[]; canManage: boolean; canCreate: boolean }> {
   if (s.role === "employee") return { reqs: [], cands: [], canManage: false, canCreate: false };
   return withSession(s, async (tx) => {
-    const rq = (await tx.execute(sql`select id, title, department, location, openings, status, hiring_manager_id from requisition order by created_at desc`)).rows as Array<Record<string, unknown>>;
+    const rq = (await tx.execute(sql`select id, title, department, location, openings, status, description, hiring_manager_id from requisition order by created_at desc`)).rows as Array<Record<string, unknown>>;
     const cd = (await tx.execute(sql`select id, req_id, name, stage, rating, source from candidate`)).rows as Array<Record<string, unknown>>;
     const reqs = s.role === "manager" ? rq.filter((r) => r.hiring_manager_id === s.workerId) : rq;
     const reqIds = new Set(reqs.map((r) => r.id as string));
@@ -25,20 +25,22 @@ export async function listRecruitment(s: Session): Promise<{ reqs: Req[]; cands:
     const reqsOut: Req[] = reqs.map((r) => ({
       id: r.id as string, title: r.title as string, department: (r.department as string) ?? null,
       location: (r.location as string) ?? null, openings: r.openings as number, status: r.status as string,
+      description: (r.description as string) ?? null,
       candidates: cd.filter((c) => c.req_id === r.id && c.stage !== "Rejected").length,
     }));
     return { reqs: reqsOut, cands, canManage: canManage(s), canCreate: canCreate(s) };
   });
 }
 
-export async function createRequisition(s: Session, input: { title: string; department: string | null; location: string | null; openings: number }): Promise<void> {
+export async function createRequisition(s: Session, input: { title: string; department: string | null; location: string | null; openings: number; description?: string | null }): Promise<void> {
   if (!canCreate(s)) throw new Error("Not authorized.");
   if (!input.title.trim()) throw new Error("Role title is required.");
   // Managers raise reqs that need HR sign-off; HR/Owner-created reqs open directly.
   const status = canManage(s) ? "Open" : "Pending approval";
+  const description = input.description?.trim() || null;
   await withSession(s, async (tx) => {
-    await tx.execute(sql`insert into requisition (tenant_id, title, department, location, openings, status, hiring_manager_id, opened_on)
-      values (${s.tenantId}, ${input.title.trim()}, ${input.department}, ${input.location}, ${input.openings || 1}, ${status}, ${s.workerId}, current_date)`);
+    await tx.execute(sql`insert into requisition (tenant_id, title, department, location, openings, status, description, hiring_manager_id, opened_on)
+      values (${s.tenantId}, ${input.title.trim()}, ${input.department}, ${input.location}, ${input.openings || 1}, ${status}, ${description}, ${s.workerId}, current_date)`);
     await tx.execute(sql`insert into audit_log (tenant_id, actor_id, action, entity, after) values (${s.tenantId}, ${s.userId}, 'create', 'requisition', ${JSON.stringify({ ...input, status })}::jsonb)`);
   });
 }

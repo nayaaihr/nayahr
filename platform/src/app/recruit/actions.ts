@@ -19,6 +19,7 @@ export async function createReqAction(fd: FormData): Promise<R> {
       department: String(fd.get("department") ?? "").trim() || null,
       location: String(fd.get("location") ?? "").trim() || null,
       openings: Number(fd.get("openings") ?? 1) || 1,
+      description: String(fd.get("description") ?? "").trim() || null,
     });
   });
 }

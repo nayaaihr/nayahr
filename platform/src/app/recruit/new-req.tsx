@@ -41,6 +41,9 @@ export function NewReq({ canApprove }: { canApprove: boolean }) {
                   <div><label>Location</label><input name="location" placeholder="e.g. Bengaluru" /></div>
                   <div><label>Openings</label><input type="number" name="openings" defaultValue={1} min={1} /></div>
                 </div>
+                <div><label>Description / notes</label>
+                  <textarea name="description" rows={4} placeholder="Role context, must-have skills, why we're hiring, team, budget notes…" />
+                </div>
                 <p className="hint">{note}</p>
               </div>
               <div className="modal-ft">
