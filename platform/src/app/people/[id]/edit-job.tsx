@@ -6,10 +6,10 @@ import { changeJobAction } from "./actions";
 
 type Opt = { id: string; name: string };
 
-export function EditJob({ workerId, current, departments, locations, people }: {
+export function EditJob({ workerId, current, departments, locations, people, directEdit }: {
   workerId: string;
   current: { title: string; department: string | null; location: string | null; managerId: string | null; status: string };
-  departments: Opt[]; locations: Opt[]; people: Opt[];
+  departments: Opt[]; locations: Opt[]; people: Opt[]; directEdit: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -31,11 +31,11 @@ export function EditJob({ workerId, current, departments, locations, people }: {
 
   return (
     <>
-      <button className="btn" onClick={() => { setErr(null); setOpen(true); }}>Edit job details</button>
+      <button className="btn" onClick={() => { setErr(null); setOpen(true); }}>{directEdit ? "Edit job details" : "Request job change"}</button>
       {open && (
         <div className="scrim" onClick={(e) => { if (e.target === e.currentTarget) setOpen(false); }}>
           <div className="modal">
-            <div className="modal-hd"><h3>Edit job details</h3><button className="x" onClick={() => setOpen(false)} aria-label="Close">×</button></div>
+            <div className="modal-hd"><h3>{directEdit ? "Edit job details" : "Request job change"}</h3><button className="x" onClick={() => setOpen(false)} aria-label="Close">×</button></div>
             <form onSubmit={onSubmit}>
               <div className="modal-bd">
                 {err && <div className="err">{err}</div>}
@@ -59,11 +59,13 @@ export function EditJob({ workerId, current, departments, locations, people }: {
                     <select name="status" defaultValue={current.status}><option>Active</option><option>On leave</option><option>Terminated</option></select>
                   </div>
                 </div>
-                <p className="hint">This records an effective-dated change — the previous values are preserved in the job history below.</p>
+                <p className="hint">{directEdit
+                  ? "This records an effective-dated change — the previous values are preserved in the job history below."
+                  : "This will be sent to HR for approval. Once approved, it's recorded as an effective-dated change."}</p>
               </div>
               <div className="modal-ft">
                 <button type="button" className="btn ghost" onClick={() => setOpen(false)}>Cancel</button>
-                <button type="submit" className="btn" disabled={pending}>{pending ? "Saving…" : "Save change"}</button>
+                <button type="submit" className="btn" disabled={pending}>{pending ? (directEdit ? "Saving…" : "Submitting…") : (directEdit ? "Save change" : "Submit for approval")}</button>
               </div>
             </form>
           </div>

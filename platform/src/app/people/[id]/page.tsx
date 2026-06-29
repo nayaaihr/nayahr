@@ -46,10 +46,17 @@ export default async function WorkerPage({ params }: { params: { id: string } })
           <EditJob
             workerId={p.worker_id}
             current={{ title: p.title, department: p.department, location: p.location, managerId: p.manager_id, status: p.employment_status }}
-            departments={ref.departments} locations={ref.locations} people={people}
+            departments={ref.departments} locations={ref.locations} people={people} directEdit={d.directEdit}
           />
         )}
       </div>
+
+      {d.pending && (
+        <div className="banner-pending">
+          ⏳ A job change to <strong>{d.pending.title}</strong> ({d.pending.new_status}) effective <strong>{fmt(d.pending.effective_date)}</strong> is <strong>pending HR approval</strong>.
+          {d.directEdit && <> Approve or reject it from your <Link href="/inbox" style={{ color: "inherit", textDecoration: "underline" }}>Inbox</Link>.</>}
+        </div>
+      )}
 
       {/* Core HR */}
       <div className="panel" style={{ marginBottom: 20 }}>

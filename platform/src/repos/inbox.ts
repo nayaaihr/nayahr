@@ -4,10 +4,11 @@ import { listLeave } from "@/repos/leave";
 import { listRecruitment } from "@/repos/recruit";
 import { listCompChanges } from "@/repos/comp";
 import { listPerformance } from "@/repos/perf";
+import { listPendingJobChanges } from "@/repos/worker-detail";
 import { rupee } from "@/lib/salary";
 
 export type InboxItem = {
-  kind: "leave" | "requisition" | "comp" | "review";
+  kind: "leave" | "requisition" | "comp" | "review" | "jobchange";
   id: string;                                       // entity id the action operates on
   action: "approve_reject" | "acknowledge" | "link"; // inline controls to render
   title: string;
@@ -36,6 +37,9 @@ export async function inboxItems(s: Session): Promise<InboxItem[]> {
     const cc = await listCompChanges(s);
     cc.filter((c) => c.status === "Pending").forEach((c) =>
       items.push({ kind: "comp", id: c.id, action: "approve_reject", title: `Pay change — ${c.employee}`, subtitle: `→ ${rupee(c.new_amount)} effective ${c.effective_date}`, href: "/comp" }));
+    const jc = await listPendingJobChanges(s);
+    jc.forEach((j) =>
+      items.push({ kind: "jobchange", id: j.id, action: "approve_reject", title: `Job change — ${j.employee}`, subtitle: `→ ${j.title}, effective ${j.effective_date}`, href: `/people/${j.worker_id}` }));
   }
 
   // Performance reviews
@@ -76,6 +80,7 @@ export async function inboxCount(s: Session): Promise<number> {
             (select count(*) from leave_request where status = 'Pending') +
             (select count(*) from requisition where status = 'Pending approval') +
             (select count(*) from comp_change_request where status = 'Pending') +
+            (select count(*) from job_change_request where req_status = 'Pending') +
             (select count(*) from review where stage = 'HR review')
           )::int n`)).rows as Array<{ n: number }>;
         total += r[0]?.n ?? 0;

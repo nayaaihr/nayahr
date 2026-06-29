@@ -6,6 +6,7 @@ import { decideLeave } from "@/repos/leave";
 import { decideRequisition } from "@/repos/recruit";
 import { decideCompChange } from "@/repos/comp";
 import { hrAcknowledge } from "@/repos/perf";
+import { decideJobChange } from "@/repos/worker-detail";
 
 export type R = { ok: true } | { ok: false; error: string };
 
@@ -17,6 +18,7 @@ export async function inboxDecideAction(kind: string, id: string, approve: boole
     if (kind === "leave") await decideLeave(s, id, approve ? "Approved" : "Rejected");
     else if (kind === "requisition") await decideRequisition(s, id, approve);
     else if (kind === "comp") await decideCompChange(s, id, approve);
+    else if (kind === "jobchange") await decideJobChange(s, id, approve);
     else if (kind === "review") await hrAcknowledge(s, id, ""); // acknowledge only
     else throw new Error("Unknown action.");
     revalidatePath("/inbox");
