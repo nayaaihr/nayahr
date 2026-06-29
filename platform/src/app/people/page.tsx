@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getSession } from "@/lib/session";
 import { listPeople, listRefData } from "@/repos/people";
 import { listAccess } from "@/repos/access";
@@ -66,7 +67,7 @@ export default async function PeoplePage() {
               <tr key={p.worker_id}>
                 <td>
                   <span className="av">{p.photo_url ? <img src={p.photo_url} alt="" /> : initials(p.full_name)}</span>
-                  {p.full_name}
+                  <Link href={`/people/${p.worker_id}`} className="row-link">{p.full_name}</Link>
                 </td>
                 {showEmail && <td>{p.email ? <a href={`mailto:${p.email}`} style={{ color: "var(--brand)" }}>{p.email}</a> : <span style={{ color: "var(--muted)" }}>—</span>}</td>}
                 <td>{p.title}</td>

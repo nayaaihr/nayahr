@@ -53,6 +53,8 @@ main { padding: 30px 34px 64px; }
 /* Panels + tables */
 .panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); overflow-x: auto; overflow-y: hidden; box-shadow: var(--shadow); }
 .panel table { min-width: max-content; }
+.row-link { color: var(--ink); text-decoration: none; font-weight: 500; }
+.row-link:hover { color: var(--brand); text-decoration: underline; }
 .panel-hd { display: flex; align-items: center; justify-content: space-between; padding: 17px 22px; border-bottom: 1px solid var(--line-2); font-weight: 650; font-size: 15px; letter-spacing: -0.015em; }
 table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
 th { text-align: left; color: var(--muted); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; padding: 13px 22px; border-bottom: 1px solid var(--line); background: #fcfcfd; }
