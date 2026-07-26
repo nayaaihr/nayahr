@@ -5,6 +5,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>NayaHR — The AI-native HRIS for Indian businesses</title>
 <meta name="description" content="NayaHR is a modern, AI-native HR platform for Indian SMBs — Core HR, Recruitment, Performance, Compensation, Time & Leave, and Reporting, with an assistant that gets work done." />
+<link rel="canonical" href="https://nayahr.in/" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230071e3'/%3E%3Ctext x='16' y='23' font-family='Arial' font-size='19' font-weight='800' fill='white' text-anchor='middle'%3EN%3C/text%3E%3C/svg%3E" />
+<!-- Open Graph / social preview -->
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="NayaHR" />
+<meta property="og:url" content="https://nayahr.in/" />
+<meta property="og:title" content="NayaHR — The AI-native HRIS for Indian businesses" />
+<meta property="og:description" content="Run your whole people operation — hiring, performance, pay, and time off — in one platform, with an AI assistant that gets work done." />
+<meta property="og:image" content="https://nayahr.in/og.svg" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="NayaHR — The AI-native HRIS for Indian businesses" />
+<meta name="twitter:description" content="One clean platform for hiring, performance, pay and time off — with AI that gets work done. Built for Indian SMBs." />
+<meta name="twitter:image" content="https://nayahr.in/og.svg" />
+<meta name="theme-color" content="#0071e3" />
 <style>
   :root{
     --brand:#0071e3; --brand-strong:#0a5bd0; --ink:#1d1d1f; --muted:#6b6b70;
@@ -30,13 +44,39 @@
   .nav-links a:hover{color:var(--ink)}
   @media(max-width:720px){.nav-links a:not(.btn){display:none}}
   /* hero */
-  .hero{text-align:center;padding:84px 0 60px;background:radial-gradient(1100px 460px at 50% -8%,#eaf3ff 0%,rgba(234,243,255,0) 62%)}
+  .hero{text-align:center;padding:78px 0 34px;background:radial-gradient(1100px 460px at 50% -8%,#eaf3ff 0%,rgba(234,243,255,0) 62%)}
   .pill{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600;color:var(--brand-strong);background:#eaf3ff;border:1px solid #d5e8ff;border-radius:980px;padding:6px 13px;margin-bottom:22px}
   h1{font-size:clamp(34px,6vw,58px);line-height:1.05;letter-spacing:-.03em;font-weight:750;max-width:16ch;margin:0 auto}
   .sub{font-size:clamp(16px,2.4vw,20px);color:var(--muted);max-width:56ch;margin:20px auto 30px}
   .cta-row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
-  .trust{margin-top:26px;font-size:13px;color:var(--muted)}
+  .trust{margin-top:24px;font-size:13px;color:var(--muted)}
   .trust strong{color:var(--ink)}
+  /* product mockup */
+  .mockwrap{max-width:960px;margin:44px auto 0;padding:0 22px}
+  .mock{border-radius:16px;overflow:hidden;border:1px solid var(--line);box-shadow:0 24px 70px rgba(10,40,90,.16);background:#fff}
+  .mock-bar{display:flex;align-items:center;gap:7px;padding:11px 14px;background:#f1f1f4;border-bottom:1px solid var(--line)}
+  .mock-bar i{width:11px;height:11px;border-radius:50%;background:#d6d6dc;display:block}
+  .mock-url{margin-left:12px;background:#fff;border:1px solid var(--line);border-radius:7px;font-size:12px;color:var(--muted);padding:4px 12px}
+  .mock-app{display:grid;grid-template-columns:184px 1fr;min-height:340px;text-align:left}
+  .mock-side{background:#fbfbfd;border-right:1px solid var(--line);padding:16px 12px}
+  .mock-logo{display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px;margin-bottom:16px}
+  .mock-logo span{width:22px;height:22px;border-radius:7px;background:var(--brand);color:#fff;display:grid;place-items:center;font-size:12px;font-weight:800}
+  .mock-nav a{display:block;font-size:13px;color:var(--muted);padding:7px 10px;border-radius:8px;margin-bottom:2px}
+  .mock-nav a.on{background:#eaf3ff;color:var(--brand);font-weight:600}
+  .mock-main{padding:18px 20px;background:#fff}
+  .mock-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
+  .ms{border:1px solid var(--line);border-radius:11px;padding:12px 14px}
+  .ms b{font-size:20px;letter-spacing:-.02em;display:block}
+  .ms span{font-size:11.5px;color:var(--muted)}
+  .mtab{border:1px solid var(--line);border-radius:11px;overflow:hidden}
+  .mrow{display:grid;grid-template-columns:1.4fr 1.2fr 1fr .7fr;gap:8px;padding:10px 14px;font-size:12.5px;border-top:1px solid #f1f1f4;align-items:center}
+  .mrow:first-child{border-top:0}
+  .mrow.head{background:#fafafb;color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.03em}
+  .mrow .nm{display:flex;align-items:center;gap:8px;font-weight:600;color:var(--brand)}
+  .mrow .nm i{width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,#cfe4ff,#9cc7ff);display:block;flex:none}
+  .tag{font-size:10.5px;font-weight:600;padding:2px 9px;border-radius:980px;background:#e7f7ee;color:#177245}
+  .fab{position:absolute}
+  @media(max-width:620px){.mock-app{grid-template-columns:1fr}.mock-side{display:none}.mock-stats{grid-template-columns:1fr 1fr}}
   /* sections */
   section{padding:60px 0}
   .eyebrow{color:var(--brand);font-weight:700;font-size:13px;letter-spacing:.06em;text-transform:uppercase;text-align:center}
@@ -66,11 +106,19 @@
   .stat{background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:20px}
   .stat .n{font-size:30px;font-weight:750;letter-spacing:-.02em}
   .stat .l{font-size:13px;color:var(--muted);margin-top:2px}
+  /* demo / contact */
+  .demo-band{background:linear-gradient(180deg,#f7fbff,#eaf3ff);border:1px solid #dcebff;border-radius:26px;padding:54px 30px;text-align:center}
+  .demo-band .row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:8px}
+  .demo-mail{margin-top:18px;font-size:14px;color:var(--muted)}
+  .demo-mail a{color:var(--brand);font-weight:600}
   /* final cta */
-  .final{text-align:center;background:linear-gradient(180deg,#f7fbff,#eaf3ff);border-radius:26px;padding:60px 30px;border:1px solid #dcebff}
+  .final{text-align:center;background:var(--ink);color:#fff;border-radius:26px;padding:60px 30px}
+  .final h2{color:#fff}
+  .final .lead{color:#b9b9c0}
   /* footer */
-  footer{border-top:1px solid var(--line);padding:34px 0;color:var(--muted);font-size:13.5px}
+  footer{border-top:1px solid var(--line);padding:30px 0;color:var(--muted);font-size:13.5px}
   .foot{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+  .foot a:hover{color:var(--ink)}
 </style>
 </head>
 <body>
@@ -81,6 +129,7 @@
       <a href="#modules">Modules</a>
       <a href="#ai">AI assistant</a>
       <a href="#india">Why NayaHR</a>
+      <a href="#demo">Book a demo</a>
       <a class="btn btn-primary" href="https://app.nayahr.in">Sign in</a>
     </nav>
   </div>
@@ -94,9 +143,36 @@
       <p class="sub">NayaHR runs your whole people operation — hiring, performance, pay, and time off — in one clean platform, with an AI assistant that actually gets work done. Purpose-built for Indian SMBs.</p>
       <div class="cta-row">
         <a class="btn btn-primary" href="https://app.nayahr.in">Get started →</a>
-        <a class="btn btn-ghost" href="#modules">See what's inside</a>
+        <a class="btn btn-ghost" href="#demo">Book a demo</a>
       </div>
       <div class="trust">Multi-tenant · secure by design · <strong>your data isolated per company</strong></div>
+    </div>
+    <div class="mockwrap">
+      <div class="mock">
+        <div class="mock-bar"><i></i><i></i><i></i><div class="mock-url">app.nayahr.in/people</div></div>
+        <div class="mock-app">
+          <aside class="mock-side">
+            <div class="mock-logo"><span>N</span> NayaHR</div>
+            <nav class="mock-nav">
+              <a class="on">People</a><a>Recruitment</a><a>Performance</a><a>Compensation</a><a>Time off</a><a>Reports</a>
+            </nav>
+          </aside>
+          <div class="mock-main">
+            <div class="mock-stats">
+              <div class="ms"><b>142</b><span>Active headcount</span></div>
+              <div class="ms"><b>₹2.1Cr</b><span>Annual payroll</span></div>
+              <div class="ms"><b>7</b><span>Open roles</span></div>
+            </div>
+            <div class="mtab">
+              <div class="mrow head"><span>Name</span><span>Title</span><span>Department</span><span>Status</span></div>
+              <div class="mrow"><span class="nm"><i></i>Priya Nair</span><span>Sr. Engineer</span><span>Engineering</span><span><span class="tag">Active</span></span></div>
+              <div class="mrow"><span class="nm"><i></i>Ananya Gupta</span><span>Sales Manager</span><span>Sales</span><span><span class="tag">Active</span></span></div>
+              <div class="mrow"><span class="nm"><i></i>Aditya Kulkarni</span><span>Marketing Lead</span><span>Marketing</span><span><span class="tag">Active</span></span></div>
+              <div class="mrow"><span class="nm"><i></i>Sanjay Verma</span><span>Finance Manager</span><span>Finance</span><span><span class="tag">Active</span></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -107,7 +183,7 @@
       <p class="lead">Six modules that share the same people data — so a new hire, a promotion, or a pay change flows through automatically.</p>
       <div class="grid">
         <div class="card"><div class="ic">👥</div><h3>Core HR</h3><p>A single, effective-dated source of truth for every employee — org, roles, and full job history.</p></div>
-        <div class="card"><div class="ic">📋</div><h3>Recruitment</h3><p>Requisitions with approvals, a candidate pipeline, and one-click hire straight into Core HR.</p></div>
+        <div class="card"><div class="ic">📋</div><h3>Recruitment</h3><p>Requisitions with approvals, a candidate pipeline, share roles to LinkedIn, and one-click hire into Core HR.</p></div>
         <div class="card"><div class="ic">⭐</div><h3>Performance</h3><p>Goals and reviews with a real workflow — employee → manager → HR — and calibration-ready ratings.</p></div>
         <div class="card"><div class="ic">💰</div><h3>Compensation</h3><p>Indian CTC structure, pay bands, compa-ratio, and approval-gated, effective-dated pay changes.</p></div>
         <div class="card"><div class="ic">🌴</div><h3>Time &amp; Leave</h3><p>India-standard leave types with balances and manager approvals, all in one place.</p></div>
@@ -153,6 +229,21 @@
     </div>
   </section>
 
+  <section id="demo">
+    <div class="wrap">
+      <div class="demo-band">
+        <div class="eyebrow">See it live</div>
+        <h2 style="margin-top:10px">Book a 20-minute demo.</h2>
+        <p class="lead">We'll walk your team through NayaHR with your own roster — no slides, just the product.</p>
+        <div class="row">
+          <a class="btn btn-primary" href="mailto:hello@nayahr.in?subject=NayaHR%20demo%20request&body=Hi%20NayaHR%20team%2C%20we'd%20like%20a%20demo.%0A%0ACompany%3A%0ATeam%20size%3A%0APreferred%20time%3A">Request a demo</a>
+          <a class="btn btn-ghost" href="https://app.nayahr.in">Try it now</a>
+        </div>
+        <div class="demo-mail">Or email us at <a href="mailto:hello@nayahr.in">hello@nayahr.in</a></div>
+      </div>
+    </div>
+  </section>
+
   <section>
     <div class="wrap">
       <div class="final">
@@ -160,7 +251,7 @@
         <p class="lead">Start free — import your roster and see it come to life in minutes.</p>
         <div class="cta-row">
           <a class="btn btn-primary" href="https://app.nayahr.in">Get started →</a>
-          <a class="btn btn-ghost" href="mailto:hello@nayahr.in">Talk to us</a>
+          <a class="btn btn-ghost" href="#demo" style="background:transparent;color:#fff;border-color:rgba(255,255,255,.28)">Book a demo</a>
         </div>
       </div>
     </div>
@@ -171,7 +262,7 @@
   <div class="wrap foot">
     <div class="logo" style="font-size:15px"><span class="mark" style="width:24px;height:24px;font-size:12px">N</span> NayaHR</div>
     <div>© <span id="yr"></span> NayaHR · The AI-native HRIS for Indian businesses</div>
-    <div><a href="https://app.nayahr.in">Sign in →</a></div>
+    <div><a href="mailto:hello@nayahr.in">hello@nayahr.in</a> &nbsp;·&nbsp; <a href="https://app.nayahr.in">Sign in →</a></div>
   </div>
 </footer>
 <script>document.getElementById('yr').textContent=new Date().getFullYear();</script>
