@@ -4,6 +4,7 @@ import { NewReq } from "./new-req";
 import { CandidateActions } from "./candidate-actions";
 import { ReqDecision } from "./req-actions";
 import { AddCandidate } from "./add-candidate";
+import { ShareLinkedIn } from "@/app/share-linkedin";
 
 export const dynamic = "force-dynamic";
 
@@ -27,7 +28,7 @@ export default async function RecruitPage() {
   const inPipeline = cands.filter((c) => c.stage !== "Hired" && c.stage !== "Rejected").length;
   const offers = cands.filter((c) => c.stage === "Offer").length;
   const hired = cands.filter((c) => c.stage === "Hired").length;
-  const showReqActions = canManage && pendingReqs > 0;
+  const showReqActions = canManage; // actions column: approve pending, share open
 
   return (
     <main>
@@ -49,7 +50,7 @@ export default async function RecruitPage() {
       </div>
 
       <div className="panel" style={{ marginBottom: 20 }}>
-        <div className="panel-hd">Requisitions{showReqActions && <span className="badge">{pendingReqs} pending approval</span>}</div>
+        <div className="panel-hd">Requisitions{canManage && pendingReqs > 0 && <span className="badge">{pendingReqs} pending approval</span>}</div>
         <table>
           <thead><tr><th>Role</th><th>Dept</th><th>Location</th><th>Openings</th><th>Candidates</th><th>Status</th>{showReqActions && <th></th>}</tr></thead>
           <tbody>
@@ -66,7 +67,13 @@ export default async function RecruitPage() {
                 <td>{r.openings}</td>
                 <td>{r.candidates}</td>
                 <td>{reqStatusPill(r.status)}</td>
-                {showReqActions && <td style={{ textAlign: "right" }}>{r.status === "Pending approval" && <ReqDecision reqId={r.id} />}</td>}
+                {showReqActions && (
+                  <td style={{ textAlign: "right" }}>
+                    {r.status === "Pending approval" ? <ReqDecision reqId={r.id} />
+                      : r.status === "Open" ? <ShareLinkedIn reqId={r.id} />
+                      : null}
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>
