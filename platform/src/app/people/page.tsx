@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getSession } from "@/lib/session";
 import { listPeople, listRefData } from "@/repos/people";
 import { listAccess } from "@/repos/access";
+import { getMyProfile } from "@/repos/profile";
 import { AddEmployee } from "./add-employee";
 import { ImportRoster } from "./import-roster";
 import { InviteCell } from "./invite-button";
@@ -27,6 +28,8 @@ export default async function PeoplePage() {
   const showEmail = session.role !== "employee"; // owner / hr_admin / manager
   const ref = canAdd ? await listRefData(session) : { departments: [], locations: [] };
   const access = canAdd ? await listAccess(session) : new Map();
+  // When previewing as a manager/employee, name the persona (e.g. "Ameen Harris").
+  const personaName = (session.role === "manager" || session.role === "employee") ? (await getMyProfile(session))?.name ?? null : null;
 
   return (
     <main>
@@ -35,7 +38,7 @@ export default async function PeoplePage() {
           <h1>People (Core HR)</h1>
           <div className="sub">
             Effective-dated · as of {today} · {people.length} people · viewing as{" "}
-            <strong>{session.role}</strong>
+            <strong>{session.role}{personaName ? ` (${personaName})` : ""}</strong>
           </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
