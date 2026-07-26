@@ -9,6 +9,7 @@ import { getSession } from "@/lib/session";
 import { inboxCount } from "@/repos/inbox";
 import { getCompany } from "@/repos/company";
 import { listPersonaOptions, type PersonaOpt } from "@/repos/profile";
+import { clerkAppearance } from "./clerk-appearance";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -47,7 +48,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const canEditLogo = role === "owner" || role === "hr_admin";
 
   return (
-    <ClerkProvider>
+    <ClerkProvider appearance={clerkAppearance}>
       <html lang="en">
         <body>
           {/* Signed in → full app shell with sidebar. */}
