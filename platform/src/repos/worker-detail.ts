@@ -81,7 +81,7 @@ async function getPendingChange(s: Session, workerId: string): Promise<PendingCh
   });
 }
 
-type JobInput = { effectiveDate: string; title: string; departmentId: string | null; locationId: string | null; managerId: string | null; status: string };
+type JobInput = { effectiveDate: string; title: string; departmentId: string | null; locationId: string | null; managerId: string | null; status: string; email?: string | null };
 
 /** Effective-dated job change. HR/Owner apply it directly (appends a dated
  *  job_event; history preserved). Managers submit it for HR approval instead. */
@@ -91,6 +91,7 @@ export async function changeJob(s: Session, workerId: string, input: JobInput): 
   if (!isHR && !isManager) throw new Error("Not authorized.");
   if (!input.title.trim()) throw new Error("Job title is required.");
   if (!input.effectiveDate) throw new Error("Pick an effective date.");
+  if (input.email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(input.email.trim())) throw new Error("Enter a valid email address.");
   if (isManager) {
     if (workerId === s.workerId) throw new Error("You can't change your own job details.");
     const team = new Set((await listPeople(s)).map((p) => p.worker_id));
@@ -98,8 +99,16 @@ export async function changeJob(s: Session, workerId: string, input: JobInput): 
   }
   const eff = input.effectiveDate;
   await withSession(s, async (tx) => {
-    const w = (await tx.execute(sql`select 1 from worker where id = ${workerId} limit 1`)).rows;
+    const w = (await tx.execute(sql`select email from worker where id = ${workerId} limit 1`)).rows as Array<{ email: string | null }>;
     if (!w[0]) throw new Error("Employee not found.");
+    // Email is contact info (not effective-dated) — applied immediately + audited.
+    if (input.email !== undefined) {
+      const newEmail = input.email?.trim() || null;
+      if (newEmail !== w[0].email) {
+        await tx.execute(sql`update worker set email = ${newEmail} where id = ${workerId}`);
+        await tx.execute(sql`insert into audit_log (tenant_id, actor_id, action, entity, entity_id, after) values (${s.tenantId}, ${s.userId}, 'email_change', 'worker', ${workerId}, ${JSON.stringify({ email: newEmail })}::jsonb)`);
+      }
+    }
     if (isHR) {
       const seq = (await tx.execute(sql`select coalesce(max(seq), -1) + 1 as next from job_event where worker_id = ${workerId} and effective_date = ${eff}::date`)).rows as Array<{ next: number }>;
       await tx.execute(sql`insert into job_event (tenant_id, worker_id, effective_date, seq, event_type, title, department_id, location_id, manager_id, employment_status, recorded_by)

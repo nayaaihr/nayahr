@@ -45,7 +45,7 @@ export default async function WorkerPage({ params }: { params: { id: string } })
         {d.canEdit && (
           <EditJob
             workerId={p.worker_id}
-            current={{ title: p.title, department: p.department, location: p.location, managerId: p.manager_id, status: p.employment_status }}
+            current={{ title: p.title, department: p.department, location: p.location, managerId: p.manager_id, status: p.employment_status, email: p.email }}
             departments={ref.departments} locations={ref.locations} people={people} directEdit={d.directEdit}
           />
         )}

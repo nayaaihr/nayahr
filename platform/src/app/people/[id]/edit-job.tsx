@@ -8,7 +8,7 @@ type Opt = { id: string; name: string };
 
 export function EditJob({ workerId, current, departments, locations, people, directEdit }: {
   workerId: string;
-  current: { title: string; department: string | null; location: string | null; managerId: string | null; status: string };
+  current: { title: string; department: string | null; location: string | null; managerId: string | null; status: string; email: string | null };
   departments: Opt[]; locations: Opt[]; people: Opt[]; directEdit: boolean;
 }) {
   const [open, setOpen] = useState(false);
@@ -59,9 +59,10 @@ export function EditJob({ workerId, current, departments, locations, people, dir
                     <select name="status" defaultValue={current.status}><option>Active</option><option>On leave</option><option>Terminated</option></select>
                   </div>
                 </div>
+                <div><label>Email address</label><input type="email" name="email" defaultValue={current.email ?? ""} placeholder="name@company.com" /></div>
                 <p className="hint">{directEdit
-                  ? "This records an effective-dated change — the previous values are preserved in the job history below."
-                  : "This will be sent to HR for approval. Once approved, it's recorded as an effective-dated change."}</p>
+                  ? "Job details record an effective-dated change (previous values stay in the history below); the email updates immediately."
+                  : "Job details are sent to HR for approval (recorded as an effective-dated change on approval); the email updates immediately."}</p>
               </div>
               <div className="modal-ft">
                 <button type="button" className="btn ghost" onClick={() => setOpen(false)}>Cancel</button>

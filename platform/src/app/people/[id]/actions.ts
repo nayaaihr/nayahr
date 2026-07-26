@@ -15,6 +15,7 @@ export async function changeJobAction(workerId: string, fd: FormData): Promise<R
       locationId: String(fd.get("locationId") ?? "") || null,
       managerId: String(fd.get("managerId") ?? "") || null,
       status: String(fd.get("status") ?? "Active"),
+      email: String(fd.get("email") ?? "").trim() || null,
     });
     revalidatePath(`/people/${workerId}`);
     revalidatePath("/people");
