@@ -8,6 +8,7 @@ import { CompanyBrand } from "./company-brand";
 import { getSession } from "@/lib/session";
 import { inboxCount } from "@/repos/inbox";
 import { getCompany } from "@/repos/company";
+import { getMyProfile } from "@/repos/profile";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -21,12 +22,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   let canViewAs = false;
   let pending = 0;
   let company = { name: "NayaHR", logoUrl: null as string | null };
+  let personaName: string | null = null;
   try {
     const session = await getSession();
     role = session.role;
     // Owner can preview lower roles in any env; everyone can in dev.
     canViewAs = session.realRole === "owner" || process.env.NODE_ENV !== "production";
-    [pending, company] = await Promise.all([inboxCount(session), getCompany(session)]);
+    const [p, c, me] = await Promise.all([inboxCount(session), getCompany(session), getMyProfile(session)]);
+    pending = p; company = c; personaName = me?.name ?? null;
   } catch { /* not signed in — auth pages render without the app shell */ }
   const canEditLogo = role === "owner" || role === "hr_admin";
 
@@ -42,7 +45,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 <SideNav role={role} inboxCount={pending} />
                 <div className="side-foot">
                   <ProfileChip />
-                  {canViewAs && role && <DevSwitcher current={role} />}
+                  {canViewAs && role && <DevSwitcher current={role} personaName={personaName} />}
                   <UserButton showName />
                 </div>
               </aside>

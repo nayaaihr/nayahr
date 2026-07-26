@@ -11,7 +11,7 @@ const ROLES = [
   { v: "employee", label: "Employee" },
 ];
 
-export function DevSwitcher({ current }: { current: string }) {
+export function DevSwitcher({ current, personaName }: { current: string; personaName?: string | null }) {
   const [pending, start] = useTransition();
   const router = useRouter();
   return (
@@ -24,6 +24,9 @@ export function DevSwitcher({ current }: { current: string }) {
       >
         {ROLES.map((r) => <option key={r.v} value={r.v}>{r.label}</option>)}
       </select>
+      {personaName && (current === "manager" || current === "employee") && (
+        <div className="devsw-persona">as <strong>{personaName}</strong></div>
+      )}
     </div>
   );
 }

@@ -98,6 +98,8 @@ tr:last-child td { border-bottom: 0; }
 .devsw-lbl { display: block; font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #5b7aa8; margin-bottom: 5px; }
 .devsw select { width: 100%; border: 1px solid #d4ddea; border-radius: 8px; padding: 6px 8px; font: inherit; font-size: 12.5px; background: #fff; color: var(--ink); cursor: pointer; }
 .devsw select:focus { outline: none; border-color: var(--brand); }
+.devsw-persona { margin-top: 5px; font-size: 11.5px; color: var(--muted); }
+.devsw-persona strong { color: var(--ink); font-weight: 600; }
 .rv-step { display: flex; align-items: center; gap: 8px; font-size: 14px; margin-bottom: 8px; }
 .rv-by { margin-left: auto; font-size: 10.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
 .rv-text { font-size: 13px; line-height: 1.6; color: var(--ink); background: #f6f6f8; border-radius: 10px; padding: 11px 13px; margin: 0; white-space: pre-wrap; }
