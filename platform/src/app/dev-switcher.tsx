@@ -2,7 +2,7 @@
 
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { setDevRole } from "./dev-role-action";
+import { setDevRole, setViewAsWorker } from "./dev-role-action";
 
 const ROLES = [
   { v: "owner", label: "Owner" },
@@ -10,10 +10,15 @@ const ROLES = [
   { v: "manager", label: "Manager" },
   { v: "employee", label: "Employee" },
 ];
+type Opt = { id: string; name: string };
 
-export function DevSwitcher({ current, personaName }: { current: string; personaName?: string | null }) {
+export function DevSwitcher({ current, currentWorkerId, managers, employees }: {
+  current: string; currentWorkerId?: string | null; managers?: Opt[]; employees?: Opt[];
+}) {
   const [pending, start] = useTransition();
   const router = useRouter();
+  const personaOpts = current === "manager" ? (managers ?? []) : current === "employee" ? (employees ?? []) : [];
+
   return (
     <div className="devsw">
       <span className="devsw-lbl">View as {pending && "…"}</span>
@@ -24,8 +29,15 @@ export function DevSwitcher({ current, personaName }: { current: string; persona
       >
         {ROLES.map((r) => <option key={r.v} value={r.v}>{r.label}</option>)}
       </select>
-      {personaName && (current === "manager" || current === "employee") && (
-        <div className="devsw-persona">as <strong>{personaName}</strong></div>
+      {personaOpts.length > 0 && (
+        <select
+          className="devsw-persona-sel"
+          value={currentWorkerId ?? ""}
+          disabled={pending}
+          onChange={(e) => start(async () => { await setViewAsWorker(e.target.value); router.refresh(); })}
+        >
+          {personaOpts.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
+        </select>
       )}
     </div>
   );

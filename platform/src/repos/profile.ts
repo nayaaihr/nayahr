@@ -1,6 +1,27 @@
 import { sql } from "drizzle-orm";
 import { withSession, type Session } from "@/db/client";
 
+export type PersonaOpt = { id: string; name: string };
+
+/** Workers to offer in the "View as" persona pickers: managers (people who manage
+ *  someone; falls back to everyone if no reporting lines are set) and all employees. */
+export async function listPersonaOptions(s: Session): Promise<{ managers: PersonaOpt[]; employees: PersonaOpt[] }> {
+  return withSession(s, async (tx) => {
+    const rows = (await tx.execute(sql`
+      with cj as (
+        select distinct on (w.id) w.id, w.full_name, j.manager_id, j.employment_status
+        from worker w join job_event j on j.worker_id = w.id and j.effective_date <= current_date
+        order by w.id, j.effective_date desc, j.seq desc
+      )
+      select id, full_name, manager_id from cj where employment_status = 'Active' order by full_name
+    `)).rows as Array<{ id: string; full_name: string; manager_id: string | null }>;
+    const managerIds = new Set(rows.map((r) => r.manager_id).filter(Boolean) as string[]);
+    const all = rows.map((r) => ({ id: r.id, name: r.full_name }));
+    const managers = all.filter((r) => managerIds.has(r.id));
+    return { managers: managers.length ? managers : all, employees: all };
+  });
+}
+
 export type MyProfile = { name: string; photoUrl: string | null };
 
 /** The signed-in user's own worker profile (name + avatar), or null if they

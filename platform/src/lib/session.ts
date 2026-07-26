@@ -99,6 +99,8 @@ export async function getSession(): Promise<Session> {
           if (d.tenantId === tenantId) workerId = d.users?.[role]?.workerId ?? null;
         }
       } catch { /* ignore */ }
+      const chosen = cookies().get("view_as_worker")?.value;
+      if (chosen && (await validWorker(tenantId, chosen))) workerId = chosen;
     }
   } else if (realRole === "owner") {
     // PRODUCTION: an Owner may "view as" a lower role to preview the app. Downgrade
@@ -106,11 +108,25 @@ export async function getSession(): Promise<Session> {
     const viewAs = cookies().get("dev_role")?.value as Role | undefined;
     if (viewAs && (["hr_admin", "manager", "employee"] as Role[]).includes(viewAs)) {
       role = viewAs;
-      workerId = await pickSampleWorker(tenantId, viewAs);
+      const chosen = cookies().get("view_as_worker")?.value;
+      workerId = (chosen && (await validWorker(tenantId, chosen))) ? chosen : await pickSampleWorker(tenantId, viewAs);
     }
   }
 
   return { tenantId, userId: appUser.id, role, realRole, workerId };
+}
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+/** Confirm a chosen "view as" worker id actually belongs to this tenant. */
+async function validWorker(tenantId: string, id: string): Promise<boolean> {
+  if (!UUID_RE.test(id)) return false;
+  try {
+    return await db.transaction(async (tx) => {
+      await tx.execute(sql`select set_config('app.tenant', ${tenantId}, true)`);
+      const r = await tx.execute(sql`select 1 from worker where id = ${id} limit 1`);
+      return r.rows.length > 0;
+    });
+  } catch { return false; }
 }
 
 /** For an Owner previewing as manager/employee in production, pick a representative
