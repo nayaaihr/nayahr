@@ -90,9 +90,18 @@ cd "…/NayaHR/platform" && DATABASE_URL='<PROD owner url>' npm run client:creat
      --name "Client Legal Name Pvt Ltd" --email owner@client.com
 ```
 
-This pre-creates the tenant + a pending **Owner** and **sends the Clerk sign-up invitation** in one shot. The owner clicks the email, signs up, and NayaHR's invite-claim flow makes them the Owner of the new company. No `SIGNUP_ALLOWLIST` edit, no manual Clerk-dashboard step. (It refuses if the email is already in use.)
+This pre-creates the tenant + a pending **Owner** and **sends the Clerk sign-up invitation** in one shot. The owner clicks the email, signs up, and NayaHR's invite-claim flow makes them the Owner of the new company. No `SIGNUP_ALLOWLIST` edit, no manual Clerk-dashboard step. (It refuses if the email is already in use.) `CLERK_SECRET_KEY` must also be set for the invite to send — otherwise the workspace is created and you invite from the Clerk dashboard.
 
-> 🔧 **Future:** an in-app super-admin console could wrap this command in a button — nice-to-have, not required.
+**To remove a test or former client workspace** (deletes the tenant + all its data — dry-run first):
+
+```bash
+cd "…/NayaHR/platform" && DATABASE_URL='<PROD owner url>' npm run db:cleanup -- --tenant <tenant-uuid>            # dry run
+cd "…/NayaHR/platform" && DATABASE_URL='<PROD owner url>' npm run db:cleanup -- --tenant <tenant-uuid> --delete  # delete it
+```
+
+_(Running `npm run db:cleanup` with no `--tenant` sweeps only empty/orphan tenants — it never touches a tenant that has employees.)_
+
+> 🔧 **Future:** an in-app super-admin console could wrap these commands in buttons — nice-to-have, not required.
 
 ### Stage 2 — Owner sets up the company
 
@@ -115,11 +124,11 @@ Priya Nair,Product Designer,Design,Bengaluru,1650000,05/07/22,priya.nair@acme.co
 ```
 
 - **salary** = annual CTC as a plain number (no ₹, no commas): `1200000`.
-- **hire date** = `DD/MM/YY`.
+- **hire date** = `DD/MM/YY` or `DD/MM/YYYY` (also ISO `YYYY-MM-DD`; `/`, `-` or `.` separators all work).
 - Accepted header aliases: `title`↔`designation`/`role`, `department`↔`dept`, `location`↔`city`, `salary`↔`ctc`/`annual salary`, `hire date`↔`doj`/`date of joining`, `email`↔`email id`.
 - ⚠️ **No commas inside any value** (the importer does a simple comma split) — e.g. write `Bengaluru`, not `Bengaluru, KA`.
 
-> ⚠️ **Known limitation to fix before real imports:** the importer currently stamps **today's date** as the hire date regardless of the CSV value — so tenure will be wrong for existing staff. **Flag this and fix the date parsing before onboarding a client with historical hire dates.** _(See "Gaps to close.")_
+> ✅ **Hire dates import correctly** (fixed Jul 2026 — NH-101). Empty or unrecognisable dates fall back to *today*, so eyeball any unusual formats after importing.
 
 ### Stage 3 — Configure HR settings
 
@@ -171,9 +180,7 @@ Leave them with: the **Overview PDF**, your **support contact**, and the note th
 [ ] Collected: company name, owner email, HR emails, roster CSV, leave policy, logo
 [ ] Vercel Pro active (if this is a paying client)
 [ ] Neon on Launch (before real data)
-[ ] Owner email added to SIGNUP_ALLOWLIST + redeployed
-[ ] Owner invited in Clerk → signed up → tenant created
-[ ] Removed owner email from SIGNUP_ALLOWLIST + redeployed
+[ ] Ran `npm run client:create` → owner invited → signed up → workspace created
 [ ] Company renamed + logo uploaded
 [ ] Roster imported + departments/locations verified
 [ ] Managers set + HR admins granted
@@ -188,14 +195,16 @@ Leave them with: the **Overview PDF**, your **support contact**, and the note th
 
 ## Gaps to close before onboarding at scale (engineering to-do)
 
-These are worth fixing/building so onboarding is smooth and repeatable:
+Done since first draft:
+- ✅ **One-click client provisioning** — `npm run client:create` (NH-102).
+- ✅ **Roster hire-date import fixed** — parses `DD/MM/YY` and friends (NH-101).
 
-1. **One-click client provisioning** — a small admin script/page that creates a tenant + owner invite in one step (removes the `SIGNUP_ALLOWLIST` + manual Clerk-invite dance).
-2. **Fix roster hire-date import** — currently imports as *today*; parse the CSV `DD/MM/YY` so tenure/history is correct.
-3. **CSV robustness** — support quoted fields so values can contain commas.
-4. **Bank export + statutory summary** — the payday deliverables (NEFT/CSV of net pay; PF/ESI/PT/TDS totals sheet).
-5. **Real support email** — `hello@nayahr.in` inbox (Zoho/Google Workspace).
-6. **Data-residency decision** — confirm/host the prod DB in the Mumbai region for Indian clients.
+Still worth building so onboarding scales:
+
+1. **Bank export + statutory summary** — the payday deliverables (NEFT/CSV of net pay; PF/ESI/PT/TDS totals sheet).
+2. **CSV robustness** — support quoted fields so values can contain commas, plus a preview/validate step.
+3. **Real support email** — `hello@nayahr.in` inbox (Zoho Mail free tier — see LAUNCH-CHECKLIST).
+4. **Data-residency decision** — confirm/host the prod DB in the Mumbai region for Indian clients.
 
 ---
 
