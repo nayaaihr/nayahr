@@ -38,9 +38,9 @@ _Last updated: July 2026. (Supersedes the pre-backend demo-era backlog.)_
 
 ## 🔴 Now — launch blockers (see LAUNCH-CHECKLIST.md)
 
-### NH-101 · Fix roster hire-date import — P1 · S
-Importer stamps today's date instead of parsing the CSV `DD/MM/YY`.
-**Done when:** imported employees show their real hire date; tenure/history are correct.
+### NH-101 · Fix roster hire-date import — P1 · S · ✅ Done (Jul 2026)
+Importer stamped today's date instead of parsing the CSV `DD/MM/YY`.
+**Done:** parses `DD/MM/YY`, `DD/MM/YYYY`, ISO, and `/`/`-`/`.` separators with a 2-digit-year pivot + range validation; empty/garbage still falls back to today.
 
 ### NH-102 · One-click "Create client workspace" — P1 · M
 Replace the manual `SIGNUP_ALLOWLIST` + Clerk-invite flow with a single admin action that pre-creates a tenant + pending owner invite.

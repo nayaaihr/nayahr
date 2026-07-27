@@ -18,7 +18,7 @@ _Last updated: July 2026._
 - [ ] **[Biz] Real `hello@nayahr.in` inbox** (Zoho Mail / Google Workspace). It's on the pricing sheet and needed for support.
 
 ### Engineering
-- [ ] **[Eng] Fix roster hire-date import.** Currently stamps *today* instead of the CSV `DD/MM/YY` — imports wrong tenure/history. Data-integrity blocker for onboarding.
+- [x] **[Eng] Fix roster hire-date import.** ✅ Now parses `DD/MM/YY` (+ ISO, dot/dash separators, 2-digit-year pivot). _(NH-101, shipped Jul 2026.)_
 - [ ] **[Eng] One-click "Create client workspace".** Replace the manual `SIGNUP_ALLOWLIST` + Clerk-invite dance with a single provisioning action. (Minimum: dry-run the manual process end-to-end once.)
 - [ ] **[Eng] Final RLS isolation re-test on prod.** Two tenants, confirm zero cross-tenant leakage before real data goes in.
 
