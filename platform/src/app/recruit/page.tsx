@@ -21,7 +21,6 @@ function reqStatusPill(s: string) {
     : ""; // Filled, Closed → neutral
   return <span className={"pill " + c}>{s}</span>;
 }
-const stars = (n: number | null) => (n ? "★".repeat(n) + "☆".repeat(5 - n) : "—");
 
 export default async function RecruitPage() {
   const session = await getSession();
@@ -98,10 +97,10 @@ export default async function RecruitPage() {
           {canCreate && <AddCandidate reqs={reqs.filter((r) => r.status === "Open").map((r) => ({ id: r.id, title: r.title }))} />}
         </div>
         <table>
-          <thead><tr><th>Candidate</th><th>Requisition</th><th>Stage</th><th style={{ textAlign: "right" }}>Offer (CTC)</th><th>Rating</th></tr></thead>
+          <thead><tr><th>Candidate</th><th>Requisition</th><th>Stage</th><th style={{ textAlign: "right" }}>Offer (CTC)</th></tr></thead>
           <tbody>
             {cands.length === 0 ? (
-              <tr><td colSpan={5} style={{ padding: 32, textAlign: "center", color: "var(--muted)" }}>No candidates yet — add one to start the pipeline.</td></tr>
+              <tr><td colSpan={4} style={{ padding: 32, textAlign: "center", color: "var(--muted)" }}>No candidates yet — add one to start the pipeline.</td></tr>
             ) : cands.map((c) => (
               <tr key={c.id}>
                 <td><span className="av">{initials(c.name)}</span>{c.name}</td>
@@ -113,7 +112,6 @@ export default async function RecruitPage() {
                   </span>
                 </td>
                 <td style={{ textAlign: "right", whiteSpace: "nowrap", fontWeight: c.offer_amount ? 600 : 400, color: c.offer_amount ? undefined : "var(--muted)" }}>{lakh(c.offer_amount)}</td>
-                <td style={{ color: "#e0a912", whiteSpace: "nowrap" }}>{stars(c.rating)}</td>
               </tr>
             ))}
           </tbody>
