@@ -42,9 +42,8 @@ _Last updated: July 2026. (Supersedes the pre-backend demo-era backlog.)_
 Importer stamped today's date instead of parsing the CSV `DD/MM/YY`.
 **Done:** parses `DD/MM/YY`, `DD/MM/YYYY`, ISO, and `/`/`-`/`.` separators with a 2-digit-year pivot + range validation; empty/garbage still falls back to today.
 
-### NH-102 · One-click "Create client workspace" — P1 · M
-Replace the manual `SIGNUP_ALLOWLIST` + Clerk-invite flow with a single admin action that pre-creates a tenant + pending owner invite.
-**Done when:** onboarding a new company is one action, no env edits; owner claims via a Clerk invite.
+### NH-102 · One-click "Create client workspace" — P1 · M · ✅ Done (Jul 2026)
+`npm run client:create -- --name "…" --email owner@…` pre-creates the tenant + pending Owner and sends the Clerk invitation in one command; owner claims on sign-up. No `SIGNUP_ALLOWLIST` or manual Clerk step. Also added `db:cleanup --tenant <uuid>` targeted delete. _(A future in-app super-admin console could wrap this, but the CLI removes the launch blocker.)_
 
 ### NH-103 · Final RLS isolation re-test on prod — P1 · S · ✅ Done (Jul 2026)
 Added `npm run rls:verify` (owner + nayahr_app connections). Prod: 10/10 checks pass — app role can't bypass RLS, default-deny with no tenant, per-tenant scoping, cross-tenant read + write blocked. Re-run anytime.

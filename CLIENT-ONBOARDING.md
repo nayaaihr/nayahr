@@ -83,14 +83,16 @@ This is the operational checklist for taking a signed client from "yes" to "live
 
 ### Stage 1 — Provision the client's workspace (create their tenant)
 
-NayaHR is **invite-only** (Clerk restricted mode + app-level gate), so a new company must be created deliberately. **Today's method:**
+NayaHR is **invite-only**, so a new company is created deliberately — but it's now **one command** (`client:create`), run with the prod owner DB URL:
 
-1. **Allow the Owner's email to create a company:** in **Vercel → the `platform` project → Settings → Environment Variables**, add/append their email (or domain) to **`SIGNUP_ALLOWLIST`** (comma-separated), then **redeploy**.
-2. **Invite the Owner in Clerk:** Clerk Dashboard → (production instance) → **Users → Invitations → Invite** → their email. _(Restricted mode means they can't sign up without this.)_
-3. **Owner accepts the email → signs up** at `app.nayahr.in`. Because their email is allowlisted and has no existing company, the app **creates a fresh tenant and makes them the Owner.**
-4. **Clean up:** remove their email from `SIGNUP_ALLOWLIST` and redeploy (keeps the door closed).
+```bash
+cd "…/NayaHR/platform" && DATABASE_URL='<PROD owner url>' npm run client:create -- \
+     --name "Client Legal Name Pvt Ltd" --email owner@client.com
+```
 
-> 🔧 **Recommended improvement:** this 4-step dance doesn't scale past a handful of clients. A small **"Create client workspace" admin script/page** (pre-creates the tenant + owner invite in one action, no env edits) would make onboarding one click. _Worth building before you do this more than a few times — see "Gaps to close" below._
+This pre-creates the tenant + a pending **Owner** and **sends the Clerk sign-up invitation** in one shot. The owner clicks the email, signs up, and NayaHR's invite-claim flow makes them the Owner of the new company. No `SIGNUP_ALLOWLIST` edit, no manual Clerk-dashboard step. (It refuses if the email is already in use.)
+
+> 🔧 **Future:** an in-app super-admin console could wrap this command in a button — nice-to-have, not required.
 
 ### Stage 2 — Owner sets up the company
 
