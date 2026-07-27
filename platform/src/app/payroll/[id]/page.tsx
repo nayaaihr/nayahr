@@ -12,6 +12,10 @@ export const dynamic = "force-dynamic";
 
 const statusPill = (s: string) => <span className={"pill " + (s === "Finalized" ? "green" : "amber")}>{s}</span>;
 const rt = { textAlign: "right" as const };
+// A "—" that explains itself on hover (why a deduction is not applicable).
+const NA = ({ hint }: { hint: string }) => (
+  <span title={hint} style={{ cursor: "help", borderBottom: "1px dotted var(--line)" }}>—</span>
+);
 
 export default async function RunPage({ params }: { params: { id: string } }) {
   const session = await getSession();
@@ -64,9 +68,9 @@ export default async function RunPage({ params }: { params: { id: string } }) {
               <tr key={s.id}>
                 <td style={{ fontWeight: 600 }}>{s.name}</td>
                 <td style={rt}>{rupee(s.gross)}</td>
-                <td style={{ ...rt, color: s.lop ? "var(--red)" : "var(--muted)" }}>{s.lop ? "− " + rupee(s.lop) : "—"}</td>
+                <td style={{ ...rt, color: s.lop ? "var(--red)" : "var(--muted)" }}>{s.lop ? "− " + rupee(s.lop) : <NA hint="No loss of pay — no approved unpaid leave this month" />}</td>
                 <td style={{ ...rt, color: "var(--muted)" }}>{rupee(s.pf_employee)}</td>
-                <td style={{ ...rt, color: "var(--muted)" }}>{s.esi_employee ? rupee(s.esi_employee) : "—"}</td>
+                <td style={{ ...rt, color: "var(--muted)" }}>{s.esi_employee ? rupee(s.esi_employee) : <NA hint="Not applicable — monthly gross is above the ₹21,000 ESI ceiling" />}</td>
                 <td style={{ ...rt, color: "var(--muted)" }}>{rupee(s.pt)}</td>
                 <td style={{ ...rt, color: "var(--muted)" }}>{rupee(s.tds)}</td>
                 <td style={{ ...rt, fontWeight: 600 }}>{rupee(s.net)}</td>
