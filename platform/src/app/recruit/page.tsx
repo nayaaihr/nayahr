@@ -97,17 +97,21 @@ export default async function RecruitPage() {
           {canCreate && <AddCandidate reqs={reqs.filter((r) => r.status === "Open").map((r) => ({ id: r.id, title: r.title }))} />}
         </div>
         <table>
-          <thead><tr><th>Candidate</th><th>Requisition</th><th>Stage</th><th>Rating</th>{canManage && <th>Action</th>}</tr></thead>
+          <thead><tr><th>Candidate</th><th>Requisition</th><th>Stage</th><th>Rating</th></tr></thead>
           <tbody>
             {cands.length === 0 ? (
-              <tr><td colSpan={canManage ? 5 : 4} style={{ padding: 32, textAlign: "center", color: "var(--muted)" }}>No candidates yet — add one to start the pipeline.</td></tr>
+              <tr><td colSpan={4} style={{ padding: 32, textAlign: "center", color: "var(--muted)" }}>No candidates yet — add one to start the pipeline.</td></tr>
             ) : cands.map((c) => (
               <tr key={c.id}>
                 <td><span className="av">{initials(c.name)}</span>{c.name}</td>
                 <td>{c.req_title}</td>
-                <td>{stagePill(c.stage)}</td>
+                <td>
+                  <span style={{ display: "inline-flex", gap: 10, alignItems: "center", justifyContent: "space-between", minWidth: canManage ? 140 : undefined, width: "100%" }}>
+                    {stagePill(c.stage)}
+                    {canManage && <CandidateActions id={c.id} stage={c.stage} />}
+                  </span>
+                </td>
                 <td style={{ color: "#e0a912", whiteSpace: "nowrap" }}>{stars(c.rating)}</td>
-                {canManage && <td><CandidateActions id={c.id} stage={c.stage} /></td>}
               </tr>
             ))}
           </tbody>
