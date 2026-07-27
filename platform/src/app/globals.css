@@ -53,6 +53,13 @@ main { padding: 30px 34px 64px; }
 /* Panels + tables */
 .panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); overflow-x: auto; overflow-y: hidden; box-shadow: var(--shadow); }
 .panel table { min-width: max-content; }
+/* Keep the horizontal scrollbar visible on wide tables — macOS otherwise hides
+   the overlay scrollbar until you scroll, so it's not obvious you can pan right. */
+.panel { scrollbar-width: thin; scrollbar-color: #c3c3cc transparent; }
+.panel::-webkit-scrollbar { height: 11px; }
+.panel::-webkit-scrollbar-track { background: var(--line-2); border-radius: 999px; }
+.panel::-webkit-scrollbar-thumb { background: #c3c3cc; border-radius: 999px; border: 3px solid var(--panel); background-clip: padding-box; }
+.panel::-webkit-scrollbar-thumb:hover { background: #a9a9b4; background-clip: padding-box; }
 .banner-pending { background: #fff8e6; border: 1px solid #f3e0a8; color: #7a5d00; border-radius: 12px; padding: 12px 16px; font-size: 13px; margin-bottom: 20px; line-height: 1.5; }
 .row-link { color: var(--brand); text-decoration: none; font-weight: 600; cursor: pointer; }
 .row-link:hover { text-decoration: underline; }
