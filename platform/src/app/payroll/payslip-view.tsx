@@ -5,8 +5,8 @@ import { rupee } from "@/lib/salary";
 import { periodLabel } from "@/lib/payroll";
 import type { PayslipRow } from "@/repos/payroll";
 
-const Row = ({ label, value, strong = false, muted = false }: { label: string; value: string; strong?: boolean; muted?: boolean }) => (
-  <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", fontWeight: strong ? 700 : 400, color: muted ? "var(--muted)" : "var(--ink)", borderTop: strong ? "1px solid var(--line)" : "none", marginTop: strong ? 4 : 0 }}>
+const Row = ({ label, value, strong = false, muted = false, bottom = false }: { label: string; value: string; strong?: boolean; muted?: boolean; bottom?: boolean }) => (
+  <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", fontWeight: strong ? 700 : 400, color: muted ? "var(--muted)" : "var(--ink)", borderTop: strong ? "1px solid var(--line)" : "none", marginTop: bottom ? "auto" : (strong ? 4 : 0) }}>
     <span>{label}</span><span>{value}</span>
   </div>
 );
@@ -30,23 +30,23 @@ export function PayslipView({ slip, period, company }: { slip: PayslipRow; perio
               <div style={{ fontWeight: 650, fontSize: 15, marginBottom: 2 }}>{slip.name}</div>
               <div style={{ color: "var(--muted)", fontSize: 12.5, marginBottom: 16 }}>Net pay for {periodLabel(period)}</div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 22 }}>
-                <div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 22, alignItems: "stretch" }}>
+                <div style={{ display: "flex", flexDirection: "column" }}>
                   <div style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".04em", color: "var(--muted)", marginBottom: 4 }}>Earnings</div>
                   <Row label="Basic" value={rupee(slip.basic)} />
                   <Row label="HRA" value={rupee(slip.hra)} />
                   <Row label="Conveyance" value={rupee(slip.conveyance)} />
                   <Row label="Special allowance" value={rupee(slip.special)} />
-                  <Row label="Gross earnings" value={rupee(slip.gross)} strong />
+                  <Row label="Gross earnings" value={rupee(slip.gross)} strong bottom />
                 </div>
-                <div>
+                <div style={{ display: "flex", flexDirection: "column" }}>
                   <div style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".04em", color: "var(--muted)", marginBottom: 4 }}>Deductions</div>
                   {slip.lop > 0 && <Row label={`Loss of pay (${slip.lop_days}d)`} value={"− " + rupee(slip.lop)} />}
                   <Row label="Provident Fund" value={"− " + rupee(slip.pf_employee)} />
                   {slip.esi_employee > 0 && <Row label="ESI" value={"− " + rupee(slip.esi_employee)} />}
                   <Row label="Professional tax" value={"− " + rupee(slip.pt)} />
                   <Row label="TDS (estimated)" value={"− " + rupee(slip.tds)} />
-                  <Row label="Total deductions" value={"− " + rupee(slip.total_deductions)} strong />
+                  <Row label="Total deductions" value={"− " + rupee(slip.total_deductions)} strong bottom />
                 </div>
               </div>
 
