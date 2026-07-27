@@ -14,7 +14,7 @@ const statusPill = (s: string) => <span className={"pill " + (s === "Finalized" 
 const rt = { textAlign: "right" as const };
 // A "—" that explains itself on hover (why a deduction is not applicable).
 const NA = ({ hint }: { hint: string }) => (
-  <span title={hint} style={{ cursor: "help", borderBottom: "1px dotted var(--line)" }}>—</span>
+  <span title={hint} style={{ cursor: "help", borderBottom: "1px dotted var(--muted)" }}>—</span>
 );
 
 export default async function RunPage({ params }: { params: { id: string } }) {
@@ -80,6 +80,12 @@ export default async function RunPage({ params }: { params: { id: string } }) {
           </tbody>
         </table>
       </div>
+
+      <p className="note">
+        <strong>—</strong> means the deduction doesn&apos;t apply (hover it for the reason).
+        <strong> ESI</strong> applies only when monthly gross is ≤ ₹21,000, so it&apos;s blank for higher earners.
+        <strong> LOP</strong> shows only when there&apos;s approved <em>Loss of Pay</em> leave that month.
+      </p>
     </main>
   );
 }
