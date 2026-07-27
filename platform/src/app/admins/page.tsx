@@ -3,6 +3,7 @@ import { getSession } from "@/lib/session";
 import { listAdmins } from "@/repos/admins";
 import { getCompany } from "@/repos/company";
 import { AdminRowActions, GrantAdmin } from "./admin-actions";
+import { CompanyName } from "./company-name";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +22,11 @@ export default async function AdminsPage() {
           <h1>Administrators</h1>
           <div className="sub">Who can run HR in <strong>{company.name}</strong> · Owner only</div>
         </div>
+      </div>
+
+      <div className="panel" style={{ marginBottom: 20 }}>
+        <div className="panel-hd">Company</div>
+        <CompanyName current={company.name} />
       </div>
 
       <div className="panel" style={{ marginBottom: 20 }}>

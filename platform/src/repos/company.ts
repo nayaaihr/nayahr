@@ -11,6 +11,18 @@ export async function getCompany(s: Session): Promise<Company> {
   });
 }
 
+/** Rename the company (tenant) — HR/Owner only. Used on branding + payslips. */
+export async function setCompanyName(s: Session, name: string): Promise<void> {
+  if (!(s.role === "owner" || s.role === "hr_admin")) throw new Error("Only HR/Owner can rename the company.");
+  const clean = name.trim();
+  if (clean.length < 2) throw new Error("Enter a company name (at least 2 characters).");
+  if (clean.length > 80) throw new Error("Company name is too long (max 80 characters).");
+  await withSession(s, async (tx) => {
+    await tx.execute(sql`update tenant set name = ${clean} where id = ${s.tenantId}`);
+    await tx.execute(sql`insert into audit_log (tenant_id, actor_id, action, entity, entity_id, after) values (${s.tenantId}, ${s.userId}, 'company_rename', 'tenant', ${s.tenantId}, ${JSON.stringify({ name: clean })}::jsonb)`);
+  });
+}
+
 /** Set (or clear) the company logo — HR/Owner only. Stored as a small data URL. */
 export async function setCompanyLogo(s: Session, dataUrl: string | null): Promise<void> {
   if (!(s.role === "owner" || s.role === "hr_admin")) throw new Error("Only HR/Owner can change the company logo.");
