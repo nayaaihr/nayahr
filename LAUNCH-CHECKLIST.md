@@ -20,7 +20,7 @@ _Last updated: July 2026._
 ### Engineering
 - [x] **[Eng] Fix roster hire-date import.** ✅ Now parses `DD/MM/YY` (+ ISO, dot/dash separators, 2-digit-year pivot). _(NH-101, shipped Jul 2026.)_
 - [ ] **[Eng] One-click "Create client workspace".** Replace the manual `SIGNUP_ALLOWLIST` + Clerk-invite dance with a single provisioning action. (Minimum: dry-run the manual process end-to-end once.)
-- [ ] **[Eng] Final RLS isolation re-test on prod.** Two tenants, confirm zero cross-tenant leakage before real data goes in.
+- [x] **[Eng] Final RLS isolation re-test on prod.** ✅ 10/10 checks passed on prod (3 tenants; app role can't bypass RLS, default-deny, no cross-tenant read/write). _(NH-103 — re-run anytime with `npm run rls:verify`.)_
 
 ---
 

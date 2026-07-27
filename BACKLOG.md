@@ -46,8 +46,8 @@ Importer stamped today's date instead of parsing the CSV `DD/MM/YY`.
 Replace the manual `SIGNUP_ALLOWLIST` + Clerk-invite flow with a single admin action that pre-creates a tenant + pending owner invite.
 **Done when:** onboarding a new company is one action, no env edits; owner claims via a Clerk invite.
 
-### NH-103 · Final RLS isolation re-test on prod — P1 · S
-**Done when:** with two live tenants, neither can read/write the other's rows through any page, action, or AI tool.
+### NH-103 · Final RLS isolation re-test on prod — P1 · S · ✅ Done (Jul 2026)
+Added `npm run rls:verify` (owner + nayahr_app connections). Prod: 10/10 checks pass — app role can't bypass RLS, default-deny with no tenant, per-tenant scoping, cross-tenant read + write blocked. Re-run anytime.
 
 ### NH-104 · Backups, region & monitoring readiness — P1 · S (Biz-led)
 Neon paid + verified PITR; prod DB in **Mumbai** region; error tracking + uptime ping.
