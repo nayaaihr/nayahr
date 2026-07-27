@@ -2,22 +2,31 @@
 
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { inviteAction } from "./invite-action";
+import { inviteAction, resendInviteAction } from "./invite-action";
 
 export function InviteCell({ workerId, status }: { workerId: string; status: "active" | "invited" | "none" }) {
   const [pending, start] = useTransition();
   const router = useRouter();
 
+  const run = (fn: () => Promise<{ ok: true; emailed: boolean; note?: string } | { ok: false; error: string }>, sentMsg: string) =>
+    start(async () => {
+      const r = await fn();
+      if (!r.ok) { alert(r.error); return; }
+      alert(r.note ?? (r.emailed ? sentMsg : "Done."));
+      router.refresh();
+    });
+
   if (status === "active") return <span className="pill green">Portal active</span>;
-  if (status === "invited") return <span className="pill amber">Invited</span>;
+  if (status === "invited") return (
+    <span style={{ display: "inline-flex", gap: 8, alignItems: "center" }}>
+      <span className="pill amber">Invited</span>
+      <button className="btn ghost sm" disabled={pending} onClick={() => run(() => resendInviteAction(workerId), "Invitation resent.")}>
+        {pending ? "Resending…" : "Resend"}
+      </button>
+    </span>
+  );
   return (
-    <button className="btn ghost sm" disabled={pending}
-      onClick={() => start(async () => {
-        const r = await inviteAction(workerId);
-        if (!r.ok) { alert(r.error); return; }
-        if (r.note) alert(r.note); else if (r.emailed) alert("Invitation email sent.");
-        router.refresh();
-      })}>
+    <button className="btn ghost sm" disabled={pending} onClick={() => run(() => inviteAction(workerId), "Invitation email sent.")}>
       {pending ? "Inviting…" : "Invite"}
     </button>
   );

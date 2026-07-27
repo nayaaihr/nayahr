@@ -32,3 +32,23 @@ export async function inviteEmployee(s: Session, workerId: string): Promise<{ em
     return { email: w[0].email };
   });
 }
+
+/** Resend a portal invite for a worker who was invited but hasn't joined yet.
+ *  No new row — just returns the email so the caller can re-send the Clerk
+ *  invitation. Errors if they've already joined or were never invited. */
+export async function resendInvite(s: Session, workerId: string): Promise<{ email: string }> {
+  if (!(s.role === "owner" || s.role === "hr_admin")) throw new Error("Only HR can resend invites.");
+  return withSession(s, async (tx) => {
+    const r = (await tx.execute(sql`
+      select w.email, w.full_name, u.id as user_id, u.clerk_user_id
+      from worker w left join app_user u on u.worker_id = w.id
+      where w.id = ${workerId} limit 1
+    `)).rows as Array<{ email: string | null; full_name: string; user_id: string | null; clerk_user_id: string | null }>;
+    if (!r[0]) throw new Error("Employee not found.");
+    if (!r[0].email) throw new Error(`Add an email address for ${r[0].full_name} first.`);
+    if (!r[0].user_id) throw new Error("They haven't been invited yet — use Invite.");
+    if (r[0].clerk_user_id) throw new Error("They've already joined — no need to resend.");
+    await tx.execute(sql`insert into audit_log (tenant_id, actor_id, action, entity, entity_id, after) values (${s.tenantId}, ${s.userId}, 'invite_resend', 'worker', ${workerId}, ${JSON.stringify({ email: r[0].email })}::jsonb)`);
+    return { email: r[0].email };
+  });
+}
