@@ -40,6 +40,11 @@ const INBOX = (
   </svg>
 );
 
+const PAYROLL = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+    <rect x="3" y="5" width="18" height="14" rx="2" /><circle cx="12" cy="12" r="2.6" /><path d="M6.5 8.5h.01M17.5 15.5h.01" />
+  </svg>
+);
 const ADMINS = (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
     <path d="M12 3 5 6v5c0 4.2 2.9 7.6 7 8.6 4.1-1 7-4.4 7-8.6V6l-7-3z" /><path d="M9.3 12l1.9 1.9 3.5-3.7" />
@@ -53,6 +58,7 @@ const ITEMS: Array<{ href: string; label: string; icon: React.ReactNode; roles?:
   { href: "/recruit", label: "Recruitment", icon: RECRUIT, roles: ["owner", "hr_admin", "manager"] },
   { href: "/perform", label: "Performance", icon: PERF },
   { href: "/comp", label: "Compensation", icon: COMP },
+  { href: "/payroll", label: "Payroll", icon: PAYROLL, roles: ["owner", "hr_admin"] },
   { href: "/leave", label: "Time off", icon: TIME },
   { href: "/reports", label: "Reports", icon: REPORTS, roles: ["owner", "hr_admin", "manager"] },
   { href: "/admins", label: "Administrators", icon: ADMINS, roles: ["owner"] },

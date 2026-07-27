@@ -3,6 +3,11 @@ import { getSession } from "@/lib/session";
 import { getWorkerDetail } from "@/repos/worker-detail";
 import { listPeople, listRefData } from "@/repos/people";
 import { SalaryStructure, CompHistory } from "@/app/comp/comp-detail";
+import { getWorkerPayslips } from "@/repos/payroll";
+import { getCompany } from "@/repos/company";
+import { rupee } from "@/lib/salary";
+import { periodLabel } from "@/lib/payroll";
+import { PayslipView } from "@/app/payroll/payslip-view";
 import { EditJob } from "./edit-job";
 
 export const dynamic = "force-dynamic";
@@ -32,6 +37,8 @@ export default async function WorkerPage({ params }: { params: { id: string } })
   const selfView = session.role === "employee";
   const ref = d.canEdit ? await listRefData(session) : { departments: [], locations: [] };
   const people = d.canEdit ? (await listPeople(session)).map((x) => ({ id: x.worker_id, name: x.full_name })) : [];
+  const payslips = await getWorkerPayslips(session, params.id);
+  const company = payslips.length ? await getCompany(session) : { name: "" };
 
   return (
     <main>
@@ -95,6 +102,27 @@ export default async function WorkerPage({ params }: { params: { id: string } })
           </div>
         ) : <div style={{ padding: 22, color: "var(--muted)" }}>No compensation on file.</div>}
       </div>
+
+      {/* Payslips */}
+      {payslips.length > 0 && (
+        <div className="panel" style={{ marginBottom: 20 }}>
+          <div className="panel-hd">Payslips</div>
+          <table>
+            <thead><tr><th>Month</th><th style={{ textAlign: "right" }}>Gross</th><th style={{ textAlign: "right" }}>Deductions</th><th style={{ textAlign: "right" }}>Net pay</th><th></th></tr></thead>
+            <tbody>
+              {payslips.map((s) => (
+                <tr key={s.id}>
+                  <td style={{ fontWeight: 600 }}>{periodLabel(s.period)}</td>
+                  <td style={{ textAlign: "right" }}>{rupee(s.gross)}</td>
+                  <td style={{ textAlign: "right", color: "var(--muted)" }}>− {rupee(s.total_deductions)}</td>
+                  <td style={{ textAlign: "right", fontWeight: 600 }}>{rupee(s.net)}</td>
+                  <td style={{ textAlign: "right" }}><PayslipView slip={s} period={s.period} company={company.name} /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {/* Time off */}
       <div className="panel" style={{ marginBottom: 20 }}>

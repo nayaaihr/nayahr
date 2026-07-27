@@ -154,6 +154,41 @@ export const leaveRequest = pgTable("leave_request", {
   decidedAt: timestamp("decided_at", { withTimezone: true }),
 });
 
+export const payrollRun = pgTable("payroll_run", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  tenantId: uuid("tenant_id").notNull().references(() => tenant.id),
+  period: date("period").notNull(), // first day of the pay month
+  status: text("status").notNull().default("Draft"), // Draft | Finalized
+  notes: text("notes"),
+  createdBy: uuid("created_by"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  finalizedBy: uuid("finalized_by"),
+  finalizedAt: timestamp("finalized_at", { withTimezone: true }),
+}, (t) => ({ uq: unique().on(t.tenantId, t.period) }));
+
+export const payslip = pgTable("payslip", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  tenantId: uuid("tenant_id").notNull().references(() => tenant.id),
+  runId: uuid("run_id").notNull().references(() => payrollRun.id),
+  workerId: uuid("worker_id").notNull().references(() => worker.id),
+  basic: numeric("basic", { precision: 14, scale: 2 }).notNull().default("0"),
+  hra: numeric("hra", { precision: 14, scale: 2 }).notNull().default("0"),
+  conveyance: numeric("conveyance", { precision: 14, scale: 2 }).notNull().default("0"),
+  special: numeric("special", { precision: 14, scale: 2 }).notNull().default("0"),
+  gross: numeric("gross", { precision: 14, scale: 2 }).notNull().default("0"),
+  lopDays: numeric("lop_days", { precision: 5, scale: 1 }).notNull().default("0"),
+  lop: numeric("lop", { precision: 14, scale: 2 }).notNull().default("0"),
+  pfEmployee: numeric("pf_employee", { precision: 14, scale: 2 }).notNull().default("0"),
+  esiEmployee: numeric("esi_employee", { precision: 14, scale: 2 }).notNull().default("0"),
+  pt: numeric("pt", { precision: 14, scale: 2 }).notNull().default("0"),
+  tds: numeric("tds", { precision: 14, scale: 2 }).notNull().default("0"),
+  employerPf: numeric("employer_pf", { precision: 14, scale: 2 }).notNull().default("0"),
+  employerEsi: numeric("employer_esi", { precision: 14, scale: 2 }).notNull().default("0"),
+  totalDeductions: numeric("total_deductions", { precision: 14, scale: 2 }).notNull().default("0"),
+  net: numeric("net", { precision: 14, scale: 2 }).notNull().default("0"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (t) => ({ uq: unique().on(t.tenantId, t.runId, t.workerId) }));
+
 export const auditLog = pgTable("audit_log", {
   id: uuid("id").primaryKey().defaultRandom(),
   tenantId: uuid("tenant_id").notNull().references(() => tenant.id),
