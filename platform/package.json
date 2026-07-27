@@ -11,6 +11,7 @@
     "db:apply": "tsx scripts/apply.ts",
     "db:cleanup": "tsx scripts/cleanup-orphan-tenants.ts",
     "rls:verify": "tsx scripts/verify-rls.ts",
+    "client:create": "tsx scripts/create-client.ts",
     "seed": "tsx src/db/seed.ts",
     "db:reset": "tsx scripts/migrate.ts && tsx src/db/seed.ts"
   },

@@ -1,9 +1,14 @@
-// Delete ORPHAN tenants — ones with zero employees (e.g. stray self-serve
-// sign-ups). A tenant with any worker is always kept.
+// Delete tenants — two modes, both dry-run by default (add --delete to execute):
 //
-// Runs as the DB owner (DATABASE_URL), so pass the PROD owner url inline:
-//   DATABASE_URL='<prod owner url>' npm run db:cleanup            # dry run (report only)
-//   DATABASE_URL='<prod owner url>' npm run db:cleanup -- --delete  # actually delete
+//   Orphan sweep (default): removes tenants with ZERO employees (stray sign-ups).
+//     DATABASE_URL='<owner>' npm run db:cleanup            # dry run
+//     DATABASE_URL='<owner>' npm run db:cleanup -- --delete
+//
+//   Targeted delete: removes ONE specific tenant by id, even if it has employees.
+//     DATABASE_URL='<owner>' npm run db:cleanup -- --tenant <uuid>            # dry run
+//     DATABASE_URL='<owner>' npm run db:cleanup -- --tenant <uuid> --delete
+//
+// Runs as the DB owner (DATABASE_URL). Each delete is a single transaction.
 import { config } from "dotenv";
 import { Pool } from "pg";
 
@@ -17,32 +22,51 @@ const TABLES = [
   "audit_log", "worker", "department", "location", "app_user",
 ];
 
+type Row = { id: string; name: string; created_at: string; users: number; workers: number };
+
 async function main() {
-  const doDelete = process.argv.includes("--delete");
+  const argv = process.argv.slice(2);
+  const doDelete = argv.includes("--delete");
+  const tIdx = argv.indexOf("--tenant");
+  const targetId = tIdx >= 0 ? argv[tIdx + 1] : null;
   if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is not set");
   const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
-  const { rows: orphans } = await pool.query(
-    `select t.id, t.name, t.created_at,
-       (select count(*) from app_user u where u.tenant_id = t.id) as users
-     from tenant t
-     where not exists (select 1 from worker w where w.tenant_id = t.id)
-     order by t.created_at`
-  );
+  let victims: Row[];
+  if (targetId) {
+    if (!/^[0-9a-f-]{36}$/i.test(targetId)) { await pool.end(); throw new Error(`--tenant expects a UUID, got: ${targetId}`); }
+    const { rows } = await pool.query<Row>(
+      `select t.id, t.name, t.created_at,
+         (select count(*)::int from app_user u where u.tenant_id = t.id) as users,
+         (select count(*)::int from worker w where w.tenant_id = t.id) as workers
+       from tenant t where t.id = $1`, [targetId]);
+    if (!rows.length) { await pool.end(); throw new Error(`No tenant with id ${targetId}`); }
+    victims = rows;
+    console.log(`\nTargeted delete — 1 tenant (employees will be removed too):`);
+  } else {
+    const { rows } = await pool.query<Row>(
+      `select t.id, t.name, t.created_at,
+         (select count(*)::int from app_user u where u.tenant_id = t.id) as users,
+         0 as workers
+       from tenant t
+       where not exists (select 1 from worker w where w.tenant_id = t.id)
+       order by t.created_at`);
+    victims = rows;
+    console.log(`\nOrphan tenants (0 employees): ${victims.length}`);
+  }
 
-  console.log(`\nOrphan tenants (0 employees): ${orphans.length}`);
-  for (const o of orphans) {
-    console.log(`  ${o.id}  ${JSON.stringify(o.name)}  logins=${o.users}  created ${new Date(o.created_at).toISOString().slice(0, 10)}`);
+  for (const o of victims) {
+    console.log(`  ${o.id}  ${JSON.stringify(o.name)}  employees=${o.workers}  logins=${o.users}  created ${new Date(o.created_at).toISOString().slice(0, 10)}`);
   }
 
   if (!doDelete) {
-    console.log(`\nDRY RUN — nothing deleted. Review the list above, then re-run with:  -- --delete`);
+    console.log(`\nDRY RUN — nothing deleted. Re-run with --delete to remove ${targetId ? "this tenant" : "these"}.`);
     await pool.end();
     return;
   }
-  if (orphans.length === 0) { await pool.end(); return; }
+  if (victims.length === 0) { await pool.end(); return; }
 
-  for (const o of orphans) {
+  for (const o of victims) {
     const c = await pool.connect();
     try {
       await c.query("begin");
