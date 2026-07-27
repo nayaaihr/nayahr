@@ -3,7 +3,8 @@
 import { SignOutButton, useUser } from "@clerk/nextjs";
 import { BrandLockup } from "./brand-mark";
 
-/** Shown to a signed-in user who has no workspace and wasn't invited. */
+/** Shown to a signed-in user who has no workspace and wasn't invited.
+ *  Action button is "Go back" (signs out + returns to /sign-in). */
 export function NoWorkspace() {
   const { user } = useUser();
   const email = user?.primaryEmailAddress?.emailAddress ?? user?.emailAddresses?.[0]?.emailAddress ?? "";
