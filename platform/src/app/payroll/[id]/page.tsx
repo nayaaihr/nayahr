@@ -7,15 +7,12 @@ import { rupee } from "@/lib/salary";
 import { periodLabel } from "@/lib/payroll";
 import { RunActions } from "../run-actions";
 import { PayslipView } from "../payslip-view";
+import { HeaderHint } from "../header-hint";
 
 export const dynamic = "force-dynamic";
 
 const statusPill = (s: string) => <span className={"pill " + (s === "Finalized" ? "green" : "amber")}>{s}</span>;
 const rt = { textAlign: "right" as const };
-// A column header label that reveals a help tooltip on hover.
-const Hint = ({ label, tip }: { label: string; tip: string }) => (
-  <span title={tip} style={{ cursor: "help", borderBottom: "1px dotted var(--muted)" }}>{label}</span>
-);
 
 export default async function RunPage({ params }: { params: { id: string } }) {
   const session = await getSession();
@@ -60,9 +57,9 @@ export default async function RunPage({ params }: { params: { id: string } }) {
         <table>
           <thead><tr>
             <th>Employee</th><th style={rt}>Gross</th>
-            <th style={rt}><Hint label="LOP" tip="Loss of Pay — per-day gross × approved unpaid leave days that month. “—” means no unpaid leave." /></th>
+            <th style={rt}><HeaderHint label="LOP" tip="Loss of Pay — per-day gross × approved unpaid leave days that month. “—” means no unpaid leave." /></th>
             <th style={rt}>PF</th>
-            <th style={rt}><Hint label="ESI" tip="Employee State Insurance — applies only when monthly gross is ≤ ₹21,000. “—” means the employee is above the ceiling." /></th>
+            <th style={rt}><HeaderHint label="ESI" tip="Employee State Insurance — applies only when monthly gross is ≤ ₹21,000. “—” means the employee is above the ceiling." /></th>
             <th style={rt}>PT</th><th style={rt}>TDS</th><th style={rt}>Net pay</th><th></th>
           </tr></thead>
           <tbody>
