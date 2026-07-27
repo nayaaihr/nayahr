@@ -18,7 +18,7 @@ export function PayslipView({ slip, period, company }: { slip: PayslipRow; perio
       <button className="btn ghost sm" onClick={() => setOpen(true)}>Payslip</button>
       {open && (
         <div className="scrim" onClick={(e) => { if (e.target === e.currentTarget) setOpen(false); }}>
-          <div className="modal" style={{ maxWidth: 560 }}>
+          <div className="modal" style={{ maxWidth: 560, textAlign: "left" }}>
             <div className="modal-hd">
               <div>
                 <h3 style={{ margin: 0 }}>{company}</h3>
