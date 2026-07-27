@@ -28,6 +28,8 @@ export default async function WorkerPage({ params }: { params: { id: string } })
     );
   }
   const p = d.person;
+  // For an employee this page IS their "People" view — no list to go back to.
+  const selfView = session.role === "employee";
   const ref = d.canEdit ? await listRefData(session) : { departments: [], locations: [] };
   const people = d.canEdit ? (await listPeople(session)).map((x) => ({ id: x.worker_id, name: x.full_name })) : [];
 
@@ -35,7 +37,7 @@ export default async function WorkerPage({ params }: { params: { id: string } })
     <main>
       <div className="top">
         <div>
-          <div className="sub" style={{ marginBottom: 6 }}><Link href="/people">← People</Link></div>
+          {!selfView && <div className="sub" style={{ marginBottom: 6 }}><Link href="/people">← People</Link></div>}
           <h1 style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <span className="av" style={{ width: 40, height: 40, fontSize: 15 }}>{p.photo_url ? <img src={p.photo_url} alt="" /> : initials(p.full_name)}</span>
             {p.full_name}

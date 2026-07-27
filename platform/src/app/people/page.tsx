@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { listPeople, listRefData } from "@/repos/people";
 import { listAccess } from "@/repos/access";
@@ -22,6 +23,10 @@ function tenure(hiredOn: string) {
 
 export default async function PeoplePage() {
   const session = await getSession();
+  // Employees have no team to browse — "People" is just their own record. Send
+  // them straight to their full profile instead of a one-row, drill-in table.
+  if (session.role === "employee" && session.workerId) redirect(`/people/${session.workerId}`);
+
   const people = await listPeople(session);
   const today = new Date().toISOString().slice(0, 10);
   const canAdd = session.role === "hr_admin" || session.role === "owner";
