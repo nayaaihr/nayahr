@@ -3,7 +3,7 @@ import { withSession, type Session } from "@/db/client";
 
 export const STAGES = ["Applied", "Screening", "Interview", "Offer", "Hired"] as const;
 
-export type Req = { id: string; title: string; department: string | null; location: string | null; openings: number; status: string; description: string | null; candidates: number };
+export type Req = { id: string; title: string; department: string | null; location: string | null; openings: number; status: string; description: string | null; candidates: number; hired: number };
 export type Cand = { id: string; req_id: string; name: string; req_title: string; stage: string; rating: number | null; source: string | null };
 
 const canManage = (s: Session) => s.role === "owner" || s.role === "hr_admin"; // approves & runs the pipeline
@@ -27,6 +27,7 @@ export async function listRecruitment(s: Session): Promise<{ reqs: Req[]; cands:
       location: (r.location as string) ?? null, openings: r.openings as number, status: r.status as string,
       description: (r.description as string) ?? null,
       candidates: cd.filter((c) => c.req_id === r.id && c.stage !== "Rejected").length,
+      hired: cd.filter((c) => c.req_id === r.id && c.stage === "Hired").length,
     }));
     return { reqs: reqsOut, cands, canManage: canManage(s), canCreate: canCreate(s) };
   });

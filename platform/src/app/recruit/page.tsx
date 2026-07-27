@@ -68,7 +68,17 @@ export default async function RecruitPage() {
                 </td>
                 <td>{r.department ? <span className="pill">{r.department}</span> : "—"}</td>
                 <td>{r.location ?? "—"}</td>
-                <td>{r.openings}</td>
+                <td>
+                  {r.openings}
+                  {r.openings > 1 && (
+                    <div style={{ marginTop: 4, display: "flex", alignItems: "center", gap: 7 }}>
+                      <span style={{ display: "inline-block", width: 54, height: 5, borderRadius: 999, background: "var(--line)", overflow: "hidden" }}>
+                        <span style={{ display: "block", height: "100%", width: `${Math.min(100, Math.round((r.hired / r.openings) * 100))}%`, background: r.hired >= r.openings ? "var(--green)" : "var(--brand)" }} />
+                      </span>
+                      <span style={{ fontSize: 11, color: "var(--muted)", whiteSpace: "nowrap" }}>{r.hired} of {r.openings} filled</span>
+                    </div>
+                  )}
+                </td>
                 <td>{r.candidates}</td>
                 <td>{reqStatusPill(r.status)}</td>
                 {showReqActions && (
