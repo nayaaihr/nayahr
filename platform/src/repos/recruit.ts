@@ -91,9 +91,9 @@ export async function setCandidateStage(s: Session, id: string, stage: string): 
 export async function hireCandidate(s: Session, id: string): Promise<void> {
   if (!canManage(s)) throw new Error("Not authorized.");
   await withSession(s, async (tx) => {
-    const rows = (await tx.execute(sql`select c.name, c.email, r.title, r.department, r.location from candidate c join requisition r on r.id = c.req_id where c.id = ${id} limit 1`)).rows as Array<Record<string, string | null>>;
+    const rows = (await tx.execute(sql`select c.name, c.email, c.req_id, r.title, r.department, r.location, r.openings, r.status from candidate c join requisition r on r.id = c.req_id where c.id = ${id} limit 1`)).rows as Array<Record<string, string | number | null>>;
     if (!rows[0]) throw new Error("Candidate not found.");
-    const cand = rows[0];
+    const cand = rows[0] as { name: string; email: string | null; req_id: string; title: string | null; department: string | null; location: string | null; openings: number; status: string };
     const resolve = async (table: "department" | "location", name: string | null) => {
       if (!name) return null;
       const f = (await tx.execute(sql`select id from ${sql.raw(table)} where lower(name) = lower(${name}) limit 1`)).rows as Array<{ id: string }>;
@@ -110,5 +110,40 @@ export async function hireCandidate(s: Session, id: string): Promise<void> {
     await tx.execute(sql`insert into compensation_event (tenant_id, worker_id, effective_date, seq, amount, currency, recorded_by) values (${s.tenantId}, ${wid}, ${today}::date, 0, 600000, 'INR', ${s.userId})`);
     await tx.execute(sql`update candidate set stage = 'Hired' where id = ${id}`);
     await tx.execute(sql`insert into audit_log (tenant_id, actor_id, action, entity, entity_id, after) values (${s.tenantId}, ${s.userId}, 'hire', 'candidate', ${id}, ${JSON.stringify({ worker_id: wid, name: cand.name })}::jsonb)`);
+
+    // Auto-close the requisition once all its openings are filled.
+    const hired = Number(((await tx.execute(sql`select count(*)::int as n from candidate where req_id = ${cand.req_id} and stage = 'Hired'`)).rows[0] as { n: number }).n);
+    if (cand.status === "Open" && hired >= (cand.openings || 1)) {
+      await tx.execute(sql`update requisition set status = 'Filled' where id = ${cand.req_id} and status = 'Open'`);
+      await tx.execute(sql`insert into audit_log (tenant_id, actor_id, action, entity, entity_id, after) values (${s.tenantId}, ${s.userId}, 'req_filled', 'requisition', ${cand.req_id}, ${JSON.stringify({ status: "Filled", hired })}::jsonb)`);
+    }
+  });
+}
+
+/** HR/Owner manually closes a requisition they're no longer hiring for (keeps the
+ *  record + candidates). Reversible via reopen while nobody's been hired past it. */
+export async function closeRequisition(s: Session, reqId: string): Promise<void> {
+  if (!canManage(s)) throw new Error("Only HR can close requisitions.");
+  await withSession(s, async (tx) => {
+    const r = (await tx.execute(sql`select status from requisition where id = ${reqId} limit 1`)).rows as Array<{ status: string }>;
+    if (!r[0]) throw new Error("Requisition not found.");
+    if (r[0].status === "Filled" || r[0].status === "Closed") throw new Error("This requisition is already closed.");
+    await tx.execute(sql`update requisition set status = 'Closed' where id = ${reqId}`);
+    await tx.execute(sql`insert into audit_log (tenant_id, actor_id, action, entity, entity_id, before, after) values (${s.tenantId}, ${s.userId}, 'req_close', 'requisition', ${reqId}, ${JSON.stringify({ status: r[0].status })}::jsonb, ${JSON.stringify({ status: "Closed" })}::jsonb)`);
+  });
+}
+
+/** HR/Owner deletes a requisition that's no longer needed, along with its
+ *  candidate pipeline. Employees already hired from it are unaffected (workers
+ *  are independent records). Audited. */
+export async function deleteRequisition(s: Session, reqId: string): Promise<void> {
+  if (!canManage(s)) throw new Error("Only HR can delete requisitions.");
+  await withSession(s, async (tx) => {
+    const r = (await tx.execute(sql`select title, status from requisition where id = ${reqId} limit 1`)).rows as Array<{ title: string; status: string }>;
+    if (!r[0]) throw new Error("Requisition not found.");
+    const c = (await tx.execute(sql`select count(*)::int as n from candidate where req_id = ${reqId}`)).rows[0] as { n: number };
+    await tx.execute(sql`delete from candidate where req_id = ${reqId}`);
+    await tx.execute(sql`delete from requisition where id = ${reqId}`);
+    await tx.execute(sql`insert into audit_log (tenant_id, actor_id, action, entity, entity_id, before) values (${s.tenantId}, ${s.userId}, 'req_delete', 'requisition', ${reqId}, ${JSON.stringify({ title: r[0].title, status: r[0].status, candidates: c.n })}::jsonb)`);
   });
 }

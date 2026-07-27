@@ -2,7 +2,7 @@ import { getSession } from "@/lib/session";
 import { listRecruitment } from "@/repos/recruit";
 import { NewReq } from "./new-req";
 import { CandidateActions } from "./candidate-actions";
-import { ReqDecision } from "./req-actions";
+import { ReqDecision, ReqManage } from "./req-actions";
 import { AddCandidate } from "./add-candidate";
 import { ShareLinkedIn } from "@/app/share-linkedin";
 
@@ -14,7 +14,11 @@ function stagePill(s: string) {
   return <span className={"pill " + c}>{s}</span>;
 }
 function reqStatusPill(s: string) {
-  const c = s === "Open" ? "green" : s === "Pending approval" || s === "On hold" ? "amber" : "";
+  const c =
+    s === "Open" ? "green"
+    : s === "Pending approval" || s === "On hold" ? "amber"
+    : s === "Rejected" ? "red"
+    : ""; // Filled, Closed → neutral
   return <span className={"pill " + c}>{s}</span>;
 }
 const stars = (n: number | null) => (n ? "★".repeat(n) + "☆".repeat(5 - n) : "—");
@@ -69,9 +73,11 @@ export default async function RecruitPage() {
                 <td>{reqStatusPill(r.status)}</td>
                 {showReqActions && (
                   <td style={{ textAlign: "right" }}>
-                    {r.status === "Pending approval" ? <ReqDecision reqId={r.id} />
-                      : r.status === "Open" ? <ShareLinkedIn reqId={r.id} />
-                      : null}
+                    <span style={{ display: "inline-flex", gap: 8, alignItems: "center", justifyContent: "flex-end" }}>
+                      {r.status === "Pending approval" && <ReqDecision reqId={r.id} />}
+                      {r.status === "Open" && <ShareLinkedIn reqId={r.id} />}
+                      <ReqManage reqId={r.id} title={r.title} status={r.status} />
+                    </span>
                   </td>
                 )}
               </tr>
