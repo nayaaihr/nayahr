@@ -121,6 +121,7 @@ export const candidate = pgTable("candidate", {
   stage: text("stage").notNull().default("Applied"),
   rating: integer("rating"),
   source: text("source"),
+  offerAmount: numeric("offer_amount", { precision: 14, scale: 2 }),
   appliedOn: date("applied_on").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });

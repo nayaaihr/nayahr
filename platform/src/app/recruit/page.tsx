@@ -108,7 +108,7 @@ export default async function RecruitPage() {
                 <td>
                   <span style={{ display: "inline-flex", gap: 10, alignItems: "center", justifyContent: "space-between", minWidth: canManage ? 140 : undefined, width: "100%" }}>
                     {stagePill(c.stage)}
-                    {canManage && <CandidateActions id={c.id} stage={c.stage} />}
+                    {canManage && <CandidateActions id={c.id} stage={c.stage} name={c.name} offerAmount={c.offer_amount} />}
                   </span>
                 </td>
                 <td style={{ color: "#e0a912", whiteSpace: "nowrap" }}>{stars(c.rating)}</td>

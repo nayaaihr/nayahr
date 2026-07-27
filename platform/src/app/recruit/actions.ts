@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/session";
-import { createRequisition, decideRequisition, addCandidate, moveCandidate, setCandidateStage, hireCandidate, closeRequisition, deleteRequisition } from "@/repos/recruit";
+import { createRequisition, decideRequisition, addCandidate, moveCandidate, setCandidateStage, makeOffer, hireCandidate, closeRequisition, deleteRequisition } from "@/repos/recruit";
 
 export type R = { ok: true } | { ok: false; error: string };
 
@@ -36,6 +36,7 @@ export async function addCandidateAction(fd: FormData): Promise<R> {
 }
 export async function advanceAction(id: string): Promise<R> { return run(async () => moveCandidate(await getSession(), id, 1)); }
 export async function rejectAction(id: string): Promise<R> { return run(async () => setCandidateStage(await getSession(), id, "Rejected")); }
-export async function hireAction(id: string): Promise<R> { return run(async () => hireCandidate(await getSession(), id)); }
+export async function makeOfferAction(id: string, amount: number): Promise<R> { return run(async () => makeOffer(await getSession(), id, amount)); }
+export async function hireAction(id: string, amount: number): Promise<R> { return run(async () => hireCandidate(await getSession(), id, amount)); }
 export async function closeReqAction(reqId: string): Promise<R> { return run(async () => closeRequisition(await getSession(), reqId)); }
 export async function deleteReqAction(reqId: string): Promise<R> { return run(async () => deleteRequisition(await getSession(), reqId)); }

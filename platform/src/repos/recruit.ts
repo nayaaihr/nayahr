@@ -4,7 +4,7 @@ import { withSession, type Session } from "@/db/client";
 export const STAGES = ["Applied", "Screening", "Interview", "Offer", "Hired"] as const;
 
 export type Req = { id: string; title: string; department: string | null; location: string | null; openings: number; status: string; description: string | null; candidates: number; hired: number };
-export type Cand = { id: string; req_id: string; name: string; req_title: string; stage: string; rating: number | null; source: string | null };
+export type Cand = { id: string; req_id: string; name: string; req_title: string; stage: string; rating: number | null; source: string | null; offer_amount: number | null };
 
 const canManage = (s: Session) => s.role === "owner" || s.role === "hr_admin"; // approves & runs the pipeline
 const canCreate = (s: Session) => canManage(s) || s.role === "manager";        // managers can raise reqs
@@ -13,7 +13,7 @@ export async function listRecruitment(s: Session): Promise<{ reqs: Req[]; cands:
   if (s.role === "employee") return { reqs: [], cands: [], canManage: false, canCreate: false };
   return withSession(s, async (tx) => {
     const rq = (await tx.execute(sql`select id, title, department, location, openings, status, description, hiring_manager_id from requisition order by created_at desc`)).rows as Array<Record<string, unknown>>;
-    const cd = (await tx.execute(sql`select id, req_id, name, stage, rating, source from candidate`)).rows as Array<Record<string, unknown>>;
+    const cd = (await tx.execute(sql`select id, req_id, name, stage, rating, source, offer_amount from candidate`)).rows as Array<Record<string, unknown>>;
     const reqs = s.role === "manager" ? rq.filter((r) => r.hiring_manager_id === s.workerId) : rq;
     const reqIds = new Set(reqs.map((r) => r.id as string));
     const titleById = new Map(reqs.map((r) => [r.id as string, r.title as string]));
@@ -21,6 +21,7 @@ export async function listRecruitment(s: Session): Promise<{ reqs: Req[]; cands:
       id: c.id as string, req_id: c.req_id as string, name: c.name as string,
       req_title: titleById.get(c.req_id as string) ?? "—", stage: c.stage as string,
       rating: (c.rating as number) ?? null, source: (c.source as string) ?? null,
+      offer_amount: c.offer_amount != null ? Number(c.offer_amount) : null,
     }));
     const reqsOut: Req[] = reqs.map((r) => ({
       id: r.id as string, title: r.title as string, department: (r.department as string) ?? null,
@@ -88,9 +89,24 @@ export async function setCandidateStage(s: Session, id: string, stage: string): 
   await withSession(s, async (tx) => { await tx.execute(sql`update candidate set stage = ${stage} where id = ${id}`); });
 }
 
-/** Hire a candidate → creates a real Core HR employee (worker + dated Hire + comp + audit). */
-export async function hireCandidate(s: Session, id: string): Promise<void> {
+/** HR/Owner makes an offer: records the offered annual salary (CTC) and moves the
+ *  candidate to the Offer stage. That number pre-fills — and is finalised — at hire. */
+export async function makeOffer(s: Session, id: string, amount: number): Promise<void> {
   if (!canManage(s)) throw new Error("Not authorized.");
+  if (!(amount > 0)) throw new Error("Enter a valid annual salary.");
+  await withSession(s, async (tx) => {
+    const r = (await tx.execute(sql`select id from candidate where id = ${id} limit 1`)).rows as Array<{ id: string }>;
+    if (!r[0]) throw new Error("Candidate not found.");
+    await tx.execute(sql`update candidate set stage = 'Offer', offer_amount = ${amount} where id = ${id}`);
+    await tx.execute(sql`insert into audit_log (tenant_id, actor_id, action, entity, entity_id, after) values (${s.tenantId}, ${s.userId}, 'make_offer', 'candidate', ${id}, ${JSON.stringify({ offer_amount: amount })}::jsonb)`);
+  });
+}
+
+/** Hire a candidate at `amount` (annual CTC) → creates a real Core HR employee
+ *  (worker + dated Hire + comp at that salary + audit). */
+export async function hireCandidate(s: Session, id: string, amount: number): Promise<void> {
+  if (!canManage(s)) throw new Error("Not authorized.");
+  if (!(amount > 0)) throw new Error("Enter the salary to hire at.");
   await withSession(s, async (tx) => {
     const rows = (await tx.execute(sql`select c.name, c.email, c.req_id, r.title, r.department, r.location, r.openings, r.status from candidate c join requisition r on r.id = c.req_id where c.id = ${id} limit 1`)).rows as Array<Record<string, string | number | null>>;
     if (!rows[0]) throw new Error("Candidate not found.");
@@ -108,8 +124,8 @@ export async function hireCandidate(s: Session, id: string): Promise<void> {
     const wid = w[0].id;
     await tx.execute(sql`insert into job_event (tenant_id, worker_id, effective_date, seq, event_type, title, department_id, location_id, employment_status, recorded_by)
       values (${s.tenantId}, ${wid}, ${today}::date, 0, 'Hire', ${cand.title ?? "Employee"}, ${did}, ${lid}, 'Active', ${s.userId})`);
-    await tx.execute(sql`insert into compensation_event (tenant_id, worker_id, effective_date, seq, amount, currency, recorded_by) values (${s.tenantId}, ${wid}, ${today}::date, 0, 600000, 'INR', ${s.userId})`);
-    await tx.execute(sql`update candidate set stage = 'Hired' where id = ${id}`);
+    await tx.execute(sql`insert into compensation_event (tenant_id, worker_id, effective_date, seq, amount, currency, recorded_by) values (${s.tenantId}, ${wid}, ${today}::date, 0, ${amount}, 'INR', ${s.userId})`);
+    await tx.execute(sql`update candidate set stage = 'Hired', offer_amount = ${amount} where id = ${id}`);
     await tx.execute(sql`insert into audit_log (tenant_id, actor_id, action, entity, entity_id, after) values (${s.tenantId}, ${s.userId}, 'hire', 'candidate', ${id}, ${JSON.stringify({ worker_id: wid, name: cand.name })}::jsonb)`);
 
     // Auto-close the requisition once all its openings are filled.
