@@ -21,7 +21,8 @@ function appUrl(): string {
 async function sendClerkInvite(email: string): Promise<{ emailed: boolean; note?: string }> {
   try {
     const cc = await clerkClient();
-    await cc.invitations.createInvitation({ emailAddress: email, redirectUrl: appUrl(), ignoreExisting: true });
+    // Land on the sign-up page so Clerk's <SignUp> consumes the invitation ticket.
+    await cc.invitations.createInvitation({ emailAddress: email, redirectUrl: `${appUrl()}/sign-up`, ignoreExisting: true });
     return { emailed: true };
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
