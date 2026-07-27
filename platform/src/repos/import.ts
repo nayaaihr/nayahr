@@ -3,16 +3,33 @@ import { withSession, type Session } from "@/db/client";
 
 export type ImportResult = { imported: number; errors: string[] };
 
-// Accepts YYYY-MM-DD, DD/MM/YYYY, DD-MM-YYYY (India common). Falls back to today.
+const today = () => new Date().toISOString().slice(0, 10);
+
+/** Build an ISO date from parts, or null if the month/day are out of range. */
+function isoDate(y: number, mo: number, d: number): string | null {
+  if (mo < 1 || mo > 12 || d < 1 || d > 31) return null;
+  return `${y}-${String(mo).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+}
+
+/** Parse a hire date. Accepts ISO (YYYY-MM-DD / YYYY/M/D) and Indian day-first
+ *  (DD/MM/YYYY and DD/MM/YY, with '/', '-' or '.' separators). 2-digit years:
+ *  00–69 → 20xx, 70–99 → 19xx. Empty or unparseable falls back to today. */
 function normalizeDate(s: string): string {
   const v = (s || "").trim();
-  if (/^\d{4}-\d{2}-\d{2}$/.test(v)) return v;
-  const m = v.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/);
+  if (!v) return today();
+
+  // ISO first: year is the leading 4-digit group.
+  let m = v.match(/^(\d{4})[/-](\d{1,2})[/-](\d{1,2})$/);
+  if (m) return isoDate(+m[1], +m[2], +m[3]) ?? today();
+
+  // Day-first: DD/MM/YYYY or DD/MM/YY.
+  m = v.match(/^(\d{1,2})[/.\-](\d{1,2})[/.\-](\d{2}|\d{4})$/);
   if (m) {
-    const [, d, mo, y] = m;
-    return `${y}-${mo.padStart(2, "0")}-${d.padStart(2, "0")}`;
+    let year = +m[3];
+    if (m[3].length === 2) year = year <= 69 ? 2000 + year : 1900 + year;
+    return isoDate(year, +m[2], +m[1]) ?? today();
   }
-  return new Date().toISOString().slice(0, 10);
+  return today();
 }
 
 /**
