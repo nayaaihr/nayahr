@@ -2,9 +2,8 @@ import { getSession } from "@/lib/session";
 import { listRecruitment } from "@/repos/recruit";
 import { NewReq } from "./new-req";
 import { CandidateActions } from "./candidate-actions";
-import { ReqDecision, ReqManage } from "./req-actions";
+import { ReqActionsMenu } from "./req-menu";
 import { AddCandidate } from "./add-candidate";
-import { ShareLinkedIn } from "@/app/share-linkedin";
 
 export const dynamic = "force-dynamic";
 
@@ -56,10 +55,10 @@ export default async function RecruitPage() {
       <div className="panel" style={{ marginBottom: 20 }}>
         <div className="panel-hd">Requisitions{canManage && pendingReqs > 0 && <span className="badge">{pendingReqs} pending approval</span>}</div>
         <table>
-          <thead><tr><th>Role</th><th>Dept</th><th>Location</th><th>Openings</th><th>Candidates</th><th>Status</th>{showReqActions && <th></th>}</tr></thead>
+          <thead><tr><th>Role</th><th>Dept</th><th>Location</th><th>Openings</th><th>Candidates</th><th>Status</th></tr></thead>
           <tbody>
             {reqs.length === 0 ? (
-              <tr><td colSpan={showReqActions ? 7 : 6} style={{ padding: 32, textAlign: "center", color: "var(--muted)" }}>No requisitions.</td></tr>
+              <tr><td colSpan={6} style={{ padding: 32, textAlign: "center", color: "var(--muted)" }}>No requisitions.</td></tr>
             ) : reqs.map((r) => (
               <tr key={r.id}>
                 <td style={{ fontWeight: 600 }}>
@@ -80,16 +79,12 @@ export default async function RecruitPage() {
                   )}
                 </td>
                 <td>{r.candidates}</td>
-                <td>{reqStatusPill(r.status)}</td>
-                {showReqActions && (
-                  <td style={{ textAlign: "right" }}>
-                    <span style={{ display: "inline-flex", gap: 8, alignItems: "center", justifyContent: "flex-end" }}>
-                      {r.status === "Pending approval" && <ReqDecision reqId={r.id} />}
-                      {r.status === "Open" && <ShareLinkedIn reqId={r.id} />}
-                      <ReqManage reqId={r.id} title={r.title} status={r.status} />
-                    </span>
-                  </td>
-                )}
+                <td>
+                  <span style={{ display: "inline-flex", gap: 10, alignItems: "center", justifyContent: "space-between", minWidth: showReqActions ? 150 : undefined, width: "100%" }}>
+                    {reqStatusPill(r.status)}
+                    {showReqActions && <ReqActionsMenu reqId={r.id} title={r.title} status={r.status} />}
+                  </span>
+                </td>
               </tr>
             ))}
           </tbody>

@@ -126,6 +126,16 @@ tr:last-child td { border-bottom: 0; }
 .btn.ghost:hover { background: #d8e8fb; }
 .btn.sm { padding: 6px 12px; font-size: 12.5px; }
 
+/* Row actions kebab menu (e.g. requisition Close/Delete) */
+.rowmenu-btn { border: 1px solid var(--line); background: #fff; color: var(--muted); width: 30px; height: 28px; border-radius: 8px; cursor: pointer; font-size: 17px; line-height: 1; display: inline-flex; align-items: center; justify-content: center; flex: none; transition: background .12s, border-color .12s, color .12s; }
+.rowmenu-btn:hover { background: var(--brand-soft); color: var(--brand-deep); border-color: var(--brand-soft); }
+.rowmenu-btn:disabled { opacity: .5; cursor: default; }
+.rowmenu-pop { position: fixed; z-index: 60; background: #fff; border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 12px 34px rgba(0,0,0,.16); padding: 6px; display: flex; flex-direction: column; }
+.rowmenu-item { text-align: left; background: none; border: 0; padding: 9px 11px; border-radius: 8px; font: inherit; font-size: 13px; color: var(--ink); cursor: pointer; white-space: nowrap; }
+.rowmenu-item:hover { background: var(--brand-soft); }
+.rowmenu-item.danger { color: var(--red); }
+.rowmenu-item.danger:hover { background: var(--red-soft); }
+
 /* Empty state */
 .empty-cta { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 52px 28px; text-align: center; box-shadow: var(--shadow); }
 .empty-cta h2 { margin: 0 0 8px; font-size: 21px; font-weight: 650; letter-spacing: -0.02em; }
