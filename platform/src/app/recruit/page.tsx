@@ -8,6 +8,7 @@ import { AddCandidate } from "./add-candidate";
 export const dynamic = "force-dynamic";
 
 const initials = (n: string) => n.split(" ").map((x) => x[0]).slice(0, 2).join("").toUpperCase();
+const lakh = (n: number | null) => (n ? "₹" + (n / 100000).toFixed(1) + "L" : "—");
 function stagePill(s: string) {
   const c = s === "Hired" ? "green" : s === "Rejected" ? "red" : s === "Offer" || s === "Interview" ? "amber" : "";
   return <span className={"pill " + c}>{s}</span>;
@@ -97,10 +98,10 @@ export default async function RecruitPage() {
           {canCreate && <AddCandidate reqs={reqs.filter((r) => r.status === "Open").map((r) => ({ id: r.id, title: r.title }))} />}
         </div>
         <table>
-          <thead><tr><th>Candidate</th><th>Requisition</th><th>Stage</th><th>Rating</th></tr></thead>
+          <thead><tr><th>Candidate</th><th>Requisition</th><th>Stage</th><th style={{ textAlign: "right" }}>Offer (CTC)</th><th>Rating</th></tr></thead>
           <tbody>
             {cands.length === 0 ? (
-              <tr><td colSpan={4} style={{ padding: 32, textAlign: "center", color: "var(--muted)" }}>No candidates yet — add one to start the pipeline.</td></tr>
+              <tr><td colSpan={5} style={{ padding: 32, textAlign: "center", color: "var(--muted)" }}>No candidates yet — add one to start the pipeline.</td></tr>
             ) : cands.map((c) => (
               <tr key={c.id}>
                 <td><span className="av">{initials(c.name)}</span>{c.name}</td>
@@ -111,6 +112,7 @@ export default async function RecruitPage() {
                     {canManage && <CandidateActions id={c.id} stage={c.stage} name={c.name} offerAmount={c.offer_amount} />}
                   </span>
                 </td>
+                <td style={{ textAlign: "right", whiteSpace: "nowrap", fontWeight: c.offer_amount ? 600 : 400, color: c.offer_amount ? undefined : "var(--muted)" }}>{lakh(c.offer_amount)}</td>
                 <td style={{ color: "#e0a912", whiteSpace: "nowrap" }}>{stars(c.rating)}</td>
               </tr>
             ))}
