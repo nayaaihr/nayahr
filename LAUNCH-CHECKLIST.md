@@ -15,7 +15,7 @@ _Last updated: July 2026._
 
 ### Commercial / ops
 - [ ] **[Biz] Vercel Pro ($20/mo).** Hobby is non-commercial — required the moment money changes hands.
-- [ ] **[Biz] Real `hello@nayahr.in` inbox** (Zoho Mail / Google Workspace). It's on the pricing sheet and needed for support.
+- [x] **[Biz] Real `hello@nayahr.in` inbox.** ✅ Purchased via GoDaddy (₹1,044 / 3 yrs). _Finish setup: activate mailbox, enable DKIM + add DMARC, and send a mail-tester.com check before emailing prospects._
 
 ### Engineering
 - [x] **[Eng] Fix roster hire-date import.** ✅ Now parses `DD/MM/YY` (+ ISO, dot/dash separators, 2-digit-year pivot). _(NH-101, shipped Jul 2026.)_
