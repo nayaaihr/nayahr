@@ -18,7 +18,7 @@ export function NoWorkspace() {
         Ask your HR admin to invite <strong>{email || "your email"}</strong> from the <strong>People</strong> page, then sign in again with this same email.
       </p>
       <div style={{ marginTop: 22 }}>
-        <SignOutButton><button className="btn">Sign out</button></SignOutButton>
+        <SignOutButton redirectUrl="/sign-in"><button className="btn ghost">Go back</button></SignOutButton>
       </div>
     </div>
   );
