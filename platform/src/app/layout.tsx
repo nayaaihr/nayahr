@@ -5,7 +5,8 @@ import { Assistant } from "./people/assistant";
 import { DevSwitcher } from "./dev-switcher";
 import { ProfileChip } from "./profile-chip";
 import { CompanyBrand } from "./company-brand";
-import { getSession } from "@/lib/session";
+import { getSession, NoWorkspaceError } from "@/lib/session";
+import { NoWorkspace } from "./no-workspace";
 import { inboxCount } from "@/repos/inbox";
 import { getCompany } from "@/repos/company";
 import { listPersonaOptions, type PersonaOpt } from "@/repos/profile";
@@ -35,6 +36,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   let currentWorkerId: string | null = null;
   let managers: PersonaOpt[] = [];
   let employees: PersonaOpt[] = [];
+  let noWorkspace = false;
   try {
     const session = await getSession();
     role = session.role;
@@ -44,28 +46,39 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     const [p, c] = await Promise.all([inboxCount(session), getCompany(session)]);
     pending = p; company = c;
     if (canViewAs) { const o = await listPersonaOptions(session); managers = o.managers; employees = o.employees; }
-  } catch { /* not signed in — auth pages render without the app shell */ }
+  } catch (e) {
+    // Signed in but not invited to any workspace → show the request-invite screen.
+    if (e instanceof NoWorkspaceError) noWorkspace = true;
+    /* otherwise: not signed in — auth pages render without the app shell */
+  }
   const canEditLogo = role === "owner" || role === "hr_admin";
 
   return (
     <ClerkProvider appearance={clerkAppearance}>
       <html lang="en">
         <body>
-          {/* Signed in → full app shell with sidebar. */}
+          {/* Signed in → full app shell with sidebar, unless the account has no
+              workspace (not invited) — then show the request-invite screen. */}
           <SignedIn>
-            <div className="app">
-              <aside className="side">
-                <CompanyBrand name={company.name} logoUrl={company.logoUrl} canEdit={canEditLogo} />
-                <SideNav role={role} inboxCount={pending} />
-                <div className="side-foot">
-                  <ProfileChip />
-                  {canViewAs && role && <DevSwitcher current={role} currentWorkerId={currentWorkerId} managers={managers} employees={employees} />}
-                  <UserButton showName />
+            {noWorkspace ? (
+              <div className="auth-shell"><NoWorkspace /></div>
+            ) : (
+              <>
+                <div className="app">
+                  <aside className="side">
+                    <CompanyBrand name={company.name} logoUrl={company.logoUrl} canEdit={canEditLogo} />
+                    <SideNav role={role} inboxCount={pending} />
+                    <div className="side-foot">
+                      <ProfileChip />
+                      {canViewAs && role && <DevSwitcher current={role} currentWorkerId={currentWorkerId} managers={managers} employees={employees} />}
+                      <UserButton showName />
+                    </div>
+                  </aside>
+                  <div className="main">{children}</div>
                 </div>
-              </aside>
-              <div className="main">{children}</div>
-            </div>
-            {role && <Assistant role={role} />}
+                {role && <Assistant role={role} />}
+              </>
+            )}
           </SignedIn>
 
           {/* Signed out → clean, centered auth page (no sidebar/nav leaking in). */}

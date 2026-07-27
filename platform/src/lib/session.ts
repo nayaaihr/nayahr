@@ -20,6 +20,24 @@ import { db, type Session, type Role } from "@/db/client";
 
 type AppUserRow = { id: string; tenant_id: string; role: string; worker_id: string | null };
 
+/** A signed-in Clerk user who is not a member of any tenant and isn't allowed to
+ *  self-provision one. The app renders a friendly "request an invite" screen. */
+export class NoWorkspaceError extends Error {
+  constructor() { super("This account hasn't been invited to a workspace."); this.name = "NoWorkspaceError"; }
+}
+
+/** Emails/domains permitted to create a brand-new company (tenant) on sign-in.
+ *  Comma-separated `SIGNUP_ALLOWLIST` (e.g. "founder@acme.com, acme.com").
+ *  Empty/unset ⇒ pure invite-only: nobody gets a workspace without an invite. */
+function canSelfProvision(email: string): boolean {
+  const raw = process.env.SIGNUP_ALLOWLIST;
+  if (!raw) return false;
+  const e = email.toLowerCase();
+  const domain = e.split("@")[1] ?? "";
+  return raw.split(",").map((s) => s.trim().toLowerCase()).filter(Boolean)
+    .some((entry) => entry === e || entry === domain);
+}
+
 function companyFromEmail(email: string): string {
   const domain = email.split("@")[1]?.split(".")[0];
   if (!domain || ["gmail", "outlook", "yahoo", "hotmail", "icloud", "proton"].includes(domain.toLowerCase())) {
@@ -75,7 +93,10 @@ export async function getSession(): Promise<Session> {
     return row;
   }));
 
-  const appUser = claimed ?? (await provisionNewTenant(userId, email));
+  // Existing member or a claimed invite → in. Otherwise only allowlisted emails
+  // may start a new company; everyone else is blocked (invite-only).
+  const appUser = claimed ?? (canSelfProvision(email) ? await provisionNewTenant(userId, email) : null);
+  if (!appUser) throw new NoWorkspaceError();
 
   const realRole = appUser.role as Role;
   let role = realRole;
