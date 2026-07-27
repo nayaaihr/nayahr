@@ -40,6 +40,12 @@ const INBOX = (
   </svg>
 );
 
+const ADMINS = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+    <path d="M12 3 5 6v5c0 4.2 2.9 7.6 7 8.6 4.1-1 7-4.4 7-8.6V6l-7-3z" /><path d="M9.3 12l1.9 1.9 3.5-3.7" />
+  </svg>
+);
+
 // `roles` (when present) limits visibility; omitted = everyone.
 const ITEMS: Array<{ href: string; label: string; icon: React.ReactNode; roles?: string[] }> = [
   { href: "/inbox", label: "Inbox", icon: INBOX },
@@ -49,6 +55,7 @@ const ITEMS: Array<{ href: string; label: string; icon: React.ReactNode; roles?:
   { href: "/comp", label: "Compensation", icon: COMP },
   { href: "/leave", label: "Time off", icon: TIME },
   { href: "/reports", label: "Reports", icon: REPORTS, roles: ["owner", "hr_admin", "manager"] },
+  { href: "/admins", label: "Administrators", icon: ADMINS, roles: ["owner"] },
 ];
 
 export function SideNav({ role, inboxCount = 0 }: { role: string | null; inboxCount?: number }) {
