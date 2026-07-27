@@ -12,9 +12,9 @@ export const dynamic = "force-dynamic";
 
 const statusPill = (s: string) => <span className={"pill " + (s === "Finalized" ? "green" : "amber")}>{s}</span>;
 const rt = { textAlign: "right" as const };
-// A "—" that explains itself on hover (why a deduction is not applicable).
-const NA = ({ hint }: { hint: string }) => (
-  <span title={hint} style={{ cursor: "help", borderBottom: "1px dotted var(--muted)" }}>—</span>
+// A column header label that reveals a help tooltip on hover.
+const Hint = ({ label, tip }: { label: string; tip: string }) => (
+  <span title={tip} style={{ cursor: "help", borderBottom: "1px dotted var(--muted)" }}>{label}</span>
 );
 
 export default async function RunPage({ params }: { params: { id: string } }) {
@@ -59,7 +59,11 @@ export default async function RunPage({ params }: { params: { id: string } }) {
         <div className="panel-hd">Payslips</div>
         <table>
           <thead><tr>
-            <th>Employee</th><th style={rt}>Gross</th><th style={rt}>LOP</th><th style={rt}>PF</th><th style={rt}>ESI</th><th style={rt}>PT</th><th style={rt}>TDS</th><th style={rt}>Net pay</th><th></th>
+            <th>Employee</th><th style={rt}>Gross</th>
+            <th style={rt}><Hint label="LOP" tip="Loss of Pay — per-day gross × approved unpaid leave days that month. “—” means no unpaid leave." /></th>
+            <th style={rt}>PF</th>
+            <th style={rt}><Hint label="ESI" tip="Employee State Insurance — applies only when monthly gross is ≤ ₹21,000. “—” means the employee is above the ceiling." /></th>
+            <th style={rt}>PT</th><th style={rt}>TDS</th><th style={rt}>Net pay</th><th></th>
           </tr></thead>
           <tbody>
             {run.slips.length === 0 ? (
@@ -68,9 +72,9 @@ export default async function RunPage({ params }: { params: { id: string } }) {
               <tr key={s.id}>
                 <td style={{ fontWeight: 600 }}>{s.name}</td>
                 <td style={rt}>{rupee(s.gross)}</td>
-                <td style={{ ...rt, color: s.lop ? "var(--red)" : "var(--muted)" }}>{s.lop ? "− " + rupee(s.lop) : <NA hint="No loss of pay — no approved unpaid leave this month" />}</td>
+                <td style={{ ...rt, color: s.lop ? "var(--red)" : "var(--muted)" }}>{s.lop ? "− " + rupee(s.lop) : "—"}</td>
                 <td style={{ ...rt, color: "var(--muted)" }}>{rupee(s.pf_employee)}</td>
-                <td style={{ ...rt, color: "var(--muted)" }}>{s.esi_employee ? rupee(s.esi_employee) : <NA hint="Not applicable — monthly gross is above the ₹21,000 ESI ceiling" />}</td>
+                <td style={{ ...rt, color: "var(--muted)" }}>{s.esi_employee ? rupee(s.esi_employee) : "—"}</td>
                 <td style={{ ...rt, color: "var(--muted)" }}>{rupee(s.pt)}</td>
                 <td style={{ ...rt, color: "var(--muted)" }}>{rupee(s.tds)}</td>
                 <td style={{ ...rt, fontWeight: 600 }}>{rupee(s.net)}</td>
@@ -80,12 +84,6 @@ export default async function RunPage({ params }: { params: { id: string } }) {
           </tbody>
         </table>
       </div>
-
-      <p className="note">
-        <strong>—</strong> means the deduction doesn&apos;t apply (hover it for the reason).
-        <strong> ESI</strong> applies only when monthly gross is ≤ ₹21,000, so it&apos;s blank for higher earners.
-        <strong> LOP</strong> shows only when there&apos;s approved <em>Loss of Pay</em> leave that month.
-      </p>
     </main>
   );
 }
