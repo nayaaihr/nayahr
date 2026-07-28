@@ -85,7 +85,7 @@ type JobInput = { effectiveDate: string; title: string; departmentId: string | n
 
 /** Effective-dated job change. HR/Owner apply it directly (appends a dated
  *  job_event; history preserved). Managers submit it for HR approval instead. */
-export async function changeJob(s: Session, workerId: string, input: JobInput): Promise<{ pending: boolean }> {
+export async function changeJob(s: Session, workerId: string, input: JobInput): Promise<{ pending: boolean; emailChanged: boolean }> {
   const isHR = s.role === "owner" || s.role === "hr_admin";
   const isManager = s.role === "manager";
   if (!isHR && !isManager) throw new Error("Not authorized.");
@@ -98,16 +98,26 @@ export async function changeJob(s: Session, workerId: string, input: JobInput): 
     if (!team.has(workerId)) throw new Error("That employee isn't on your team.");
   }
   const eff = input.effectiveDate;
+  let emailChanged = false;
   await withSession(s, async (tx) => {
     const w = (await tx.execute(sql`select email from worker where id = ${workerId} limit 1`)).rows as Array<{ email: string | null }>;
     if (!w[0]) throw new Error("Employee not found.");
     // Email is contact info (not effective-dated) — applied immediately + audited.
-    if (input.email !== undefined) {
-      const newEmail = input.email?.trim() || null;
-      if (newEmail !== w[0].email) {
-        await tx.execute(sql`update worker set email = ${newEmail} where id = ${workerId}`);
-        await tx.execute(sql`insert into audit_log (tenant_id, actor_id, action, entity, entity_id, after) values (${s.tenantId}, ${s.userId}, 'email_change', 'worker', ${workerId}, ${JSON.stringify({ email: newEmail })}::jsonb)`);
-      }
+    const finalEmail = input.email !== undefined ? (input.email?.trim() || null) : w[0].email;
+    if (input.email !== undefined && finalEmail !== w[0].email) {
+      await tx.execute(sql`update worker set email = ${finalEmail} where id = ${workerId}`);
+      await tx.execute(sql`insert into audit_log (tenant_id, actor_id, action, entity, entity_id, after) values (${s.tenantId}, ${s.userId}, 'email_change', 'worker', ${workerId}, ${JSON.stringify({ email: finalEmail })}::jsonb)`);
+      emailChanged = true;
+    }
+    // Always keep the login/invite email (app_user) in sync with the worker's
+    // email — this also heals any earlier drift — unless another account in this
+    // tenant already uses that address.
+    if (finalEmail) {
+      await tx.execute(sql`
+        update app_user set email = ${finalEmail}
+        where worker_id = ${workerId} and tenant_id = ${s.tenantId} and lower(email) <> lower(${finalEmail})
+          and not exists (select 1 from app_user b where b.tenant_id = ${s.tenantId}
+                          and lower(b.email) = lower(${finalEmail}) and b.worker_id is distinct from ${workerId})`);
     }
     if (isHR) {
       const seq = (await tx.execute(sql`select coalesce(max(seq), -1) + 1 as next from job_event where worker_id = ${workerId} and effective_date = ${eff}::date`)).rows as Array<{ next: number }>;
@@ -120,7 +130,7 @@ export async function changeJob(s: Session, workerId: string, input: JobInput): 
       await tx.execute(sql`insert into audit_log (tenant_id, actor_id, action, entity, entity_id, after) values (${s.tenantId}, ${s.userId}, 'job_change_request', 'worker', ${workerId}, ${JSON.stringify({ effective_date: eff, title: input.title.trim() })}::jsonb)`);
     }
   });
-  return { pending: isManager };
+  return { pending: isManager, emailChanged };
 }
 
 /** HR/Owner approves a manager's job-change request → writes the dated job_event; or rejects. */

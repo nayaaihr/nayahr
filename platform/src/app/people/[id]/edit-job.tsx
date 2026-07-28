@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { changeJobAction } from "./actions";
+import { resendInviteAction } from "@/app/people/invite-action";
 
 type Opt = { id: string; name: string };
 
@@ -25,7 +26,14 @@ export function EditJob({ workerId, current, departments, locations, people, dir
     setErr(null);
     start(async () => {
       const res = await changeJobAction(workerId, fd);
-      if (res.ok) { setOpen(false); router.refresh(); } else setErr(res.error);
+      if (!res.ok) { setErr(res.error); return; }
+      setOpen(false);
+      // Email changed → offer to (re)send the portal invitation to the new address.
+      if (res.emailChanged && confirm("Email updated. Send them a fresh invitation to sign in with the new address?")) {
+        const r = await resendInviteAction(workerId);
+        alert(r.ok ? (r.note ?? "Invitation sent.") : r.error);
+      }
+      router.refresh();
     });
   }
 
