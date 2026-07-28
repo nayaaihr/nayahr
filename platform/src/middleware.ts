@@ -2,7 +2,7 @@ import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
 // Everything requires sign-in except the Clerk auth pages, public careers pages,
 // and the unauthenticated uptime probe.
-const isPublic = createRouteMatcher(["/sign-in(.*)", "/sign-up(.*)", "/jobs(.*)", "/api/health"]);
+const isPublic = createRouteMatcher(["/sign-in(.*)", "/sign-up(.*)", "/jobs(.*)", "/api/health", "/api/debug-error"]);
 
 export default clerkMiddleware(async (auth, req) => {
   if (!isPublic(req)) await auth.protect();
