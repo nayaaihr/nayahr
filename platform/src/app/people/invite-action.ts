@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { clerkClient } from "@clerk/nextjs/server";
 import { getSession } from "@/lib/session";
-import { inviteEmployee, resendInvite } from "@/repos/access";
+import { inviteEmployee, resendInvite, reInviteEmployee } from "@/repos/access";
 
 export type R = { ok: true; emailed: boolean; note?: string } | { ok: false; error: string };
 
@@ -66,6 +66,20 @@ export async function resendInviteAction(workerId: string): Promise<R> {
     const { email } = await resendInvite(await getSession(), workerId);
     const sent = await resendClerkInvite(email);
     revalidatePath("/people");
+    return { ok: true, ...sent };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Failed." };
+  }
+}
+
+/** Reset an active member's login and send a fresh invite to their current email
+ *  (used after changing an already-active employee's email). */
+export async function reInviteAction(workerId: string): Promise<R> {
+  try {
+    const { email } = await reInviteEmployee(await getSession(), workerId);
+    const sent = await resendClerkInvite(email);
+    revalidatePath("/people");
+    revalidatePath(`/people/${workerId}`);
     return { ok: true, ...sent };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "Failed." };

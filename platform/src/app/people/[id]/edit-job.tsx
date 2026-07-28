@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { changeJobAction } from "./actions";
-import { resendInviteAction } from "@/app/people/invite-action";
+import { reInviteAction } from "@/app/people/invite-action";
 
 type Opt = { id: string; name: string };
 
@@ -29,9 +29,10 @@ export function EditJob({ workerId, current, departments, locations, people, dir
       if (!res.ok) { setErr(res.error); return; }
       setOpen(false);
       // Email changed → offer to (re)send the portal invitation to the new address.
-      if (res.emailChanged && confirm("Email updated. Send them a fresh invitation to sign in with the new address?")) {
-        const r = await resendInviteAction(workerId);
-        alert(r.ok ? (r.note ?? "Invitation sent.") : r.error);
+      // Works whether they'd already signed in (resets their login) or not.
+      if (res.emailChanged && confirm("Email updated. Send a fresh invitation so they sign in with the new address?\n\nIf they already had access, this resets their login to the new email.")) {
+        const r = await reInviteAction(workerId);
+        alert(r.ok ? (r.note ?? "Invitation sent to the new email.") : r.error);
       }
       router.refresh();
     });
