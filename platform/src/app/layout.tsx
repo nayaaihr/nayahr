@@ -7,6 +7,7 @@ import { ProfileChip } from "./profile-chip";
 import { CompanyBrand } from "./company-brand";
 import { CompanySetupBanner } from "./company-setup-banner";
 import { getSession, NoWorkspaceError } from "@/lib/session";
+import { isSuperAdmin } from "@/lib/superadmin";
 import { NoWorkspace } from "./no-workspace";
 import { inboxCount } from "@/repos/inbox";
 import { getCompany } from "@/repos/company";
@@ -53,6 +54,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     /* otherwise: not signed in — auth pages render without the app shell */
   }
   const canEditLogo = role === "owner" || role === "hr_admin";
+  const superAdmin = await isSuperAdmin(); // provider staff — cross-tenant console link
 
   return (
     <ClerkProvider appearance={clerkAppearance}>
@@ -68,7 +70,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 <div className="app">
                   <aside className="side">
                     <CompanyBrand name={company.name} logoUrl={company.logoUrl} canEdit={canEditLogo} />
-                    <SideNav role={role} inboxCount={pending} />
+                    <SideNav role={role} inboxCount={pending} superAdmin={superAdmin} />
                     <div className="side-foot">
                       <ProfileChip />
                       {canViewAs && role && <DevSwitcher current={role} currentWorkerId={currentWorkerId} managers={managers} employees={employees} />}

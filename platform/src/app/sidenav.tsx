@@ -50,6 +50,12 @@ const ADMINS = (
     <path d="M12 3 5 6v5c0 4.2 2.9 7.6 7 8.6 4.1-1 7-4.4 7-8.6V6l-7-3z" /><path d="M9.3 12l1.9 1.9 3.5-3.7" />
   </svg>
 );
+const CLIENTS = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+    <rect x="3.5" y="8" width="8" height="12" rx="1.2" /><rect x="13" y="4" width="7.5" height="16" rx="1.2" />
+    <path d="M6 11.5h3M6 14.5h3M15.5 7.5h2.5M15.5 11h2.5M15.5 14.5h2.5" />
+  </svg>
+);
 
 // `roles` (when present) limits visibility; omitted = everyone.
 const ITEMS: Array<{ href: string; label: string; icon: React.ReactNode; roles?: string[] }> = [
@@ -64,7 +70,7 @@ const ITEMS: Array<{ href: string; label: string; icon: React.ReactNode; roles?:
   { href: "/admins", label: "Administrators", icon: ADMINS, roles: ["owner"] },
 ];
 
-export function SideNav({ role, inboxCount = 0 }: { role: string | null; inboxCount?: number }) {
+export function SideNav({ role, inboxCount = 0, superAdmin = false }: { role: string | null; inboxCount?: number; superAdmin?: boolean }) {
   const path = usePathname() ?? "";
   const items = ITEMS.filter((i) => !i.roles || (role != null && i.roles.includes(role)));
   return (
@@ -76,6 +82,12 @@ export function SideNav({ role, inboxCount = 0 }: { role: string | null; inboxCo
           {i.href === "/inbox" && inboxCount > 0 && <span className="nav-count">{inboxCount}</span>}
         </a>
       ))}
+      {superAdmin && (
+        <a href="/admin" className={path === "/admin" ? "active" : ""} title="Platform super-admin">
+          <span className="ico">{CLIENTS}</span>
+          Clients
+        </a>
+      )}
     </nav>
   );
 }
