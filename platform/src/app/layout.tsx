@@ -5,6 +5,7 @@ import { Assistant } from "./people/assistant";
 import { DevSwitcher } from "./dev-switcher";
 import { ProfileChip } from "./profile-chip";
 import { CompanyBrand } from "./company-brand";
+import { CompanySetupBanner } from "./company-setup-banner";
 import { getSession, NoWorkspaceError } from "@/lib/session";
 import { NoWorkspace } from "./no-workspace";
 import { inboxCount } from "@/repos/inbox";
@@ -32,7 +33,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   let role: string | null = null;
   let canViewAs = false;
   let pending = 0;
-  let company = { name: "NayaHR", logoUrl: null as string | null };
+  let company = { name: "NayaHR", logoUrl: null as string | null, nameConfirmed: true };
   let currentWorkerId: string | null = null;
   let managers: PersonaOpt[] = [];
   let employees: PersonaOpt[] = [];
@@ -74,7 +75,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                       <UserButton showName />
                     </div>
                   </aside>
-                  <div className="main">{children}</div>
+                  <div className="main">
+                    {(role === "owner" || role === "hr_admin") && !company.nameConfirmed && <CompanySetupBanner current={company.name} />}
+                    {children}
+                  </div>
                 </div>
                 {role && <Assistant role={role} />}
               </>

@@ -4,7 +4,10 @@
 // no SIGNUP_ALLOWLIST edit and no manual Clerk-dashboard step.
 //
 //   cd platform && DATABASE_URL='<owner url>' npm run client:create -- \
-//        --name "Acme Corp Pvt Ltd" --email owner@acme.com [--country IN]
+//        --email owner@acme.com [--name "Acme Corp Pvt Ltd"] [--country IN]
+//
+// --name is optional: omit it and the owner is prompted to set their own
+// company name on first login (name_confirmed=false).
 import { config } from "dotenv";
 import { Pool, type PoolClient } from "pg";
 
@@ -18,15 +21,24 @@ const arg = (flag: string): string | undefined => {
 };
 
 async function main() {
-  const name = (arg("--name") ?? "").trim();
+  const nameArg = (arg("--name") ?? "").trim();
   const email = (arg("--email") ?? "").trim().toLowerCase();
   const country = (arg("--country") ?? "IN").trim();
 
-  if (!name || !email) {
-    throw new Error('Usage: npm run client:create -- --name "Company Name" --email owner@company.com [--country IN]');
+  if (!email) {
+    throw new Error('Usage: npm run client:create -- --email owner@company.com [--name "Company Name"] [--country IN]');
   }
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) throw new Error("Invalid owner email.");
   if (!process.env.DATABASE_URL) throw new Error("Set DATABASE_URL (the owner role).");
+
+  // If no name is given, seed a placeholder from the email and let the owner set
+  // their real company name on first login.
+  const companyFromEmail = (e: string) => {
+    const d = (e.split("@")[1] ?? "").split(".")[0];
+    return d ? d.charAt(0).toUpperCase() + d.slice(1) : "New Company";
+  };
+  const name = nameArg.length >= 2 ? nameArg : companyFromEmail(email);
+  const nameConfirmed = nameArg.length >= 2;
 
   const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
@@ -37,12 +49,22 @@ async function main() {
     throw new Error(`${email} already has ${existing.length} membership/invite record(s). Use a different email, or remove the old workspace first.`);
   }
 
+  // name_confirmed may not exist pre-migration (0021) → insert conditionally.
+  const hasFlag = ((await pool.query(
+    `select 1 from information_schema.columns where table_name='tenant' and column_name='name_confirmed'`,
+  )).rowCount ?? 0) > 0;
+
   // Create the tenant + pending Owner atomically.
   let tenantId = "";
   const c: PoolClient = await pool.connect();
   try {
     await c.query("begin");
-    tenantId = (await c.query(`insert into tenant (name, country) values ($1, $2) returning id`, [name, country])).rows[0].id;
+    tenantId = (await c.query(
+      hasFlag
+        ? `insert into tenant (name, country, name_confirmed) values ($1, $2, $3) returning id`
+        : `insert into tenant (name, country) values ($1, $2) returning id`,
+      hasFlag ? [name, country, nameConfirmed] : [name, country],
+    )).rows[0].id;
     await c.query(`insert into app_user (tenant_id, email, role) values ($1, $2, 'owner')`, [tenantId, email]);
     await c.query(
       `insert into audit_log (tenant_id, action, entity, entity_id, after) values ($1, 'client_create', 'tenant', $1, $2::jsonb)`,
@@ -58,6 +80,7 @@ async function main() {
 
   console.log(`\n✓ Created workspace "${name}"  (tenant ${tenantId})`);
   console.log(`  Pending owner: ${email}`);
+  if (!nameConfirmed) console.log(`  (placeholder name — ${email} will be prompted to set the real company name on first login.)`);
 
   // Send the Clerk sign-up invitation.
   const sk = process.env.CLERK_SECRET_KEY;

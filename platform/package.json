@@ -16,6 +16,7 @@
     "rls:verify": "tsx scripts/verify-rls.ts",
     "client:create": "tsx scripts/create-client.ts",
     "inspect:user": "tsx scripts/inspect-user.ts",
+    "clients:list": "tsx scripts/list-clients.ts",
     "payroll:delete-run": "tsx scripts/delete-payroll-run.ts",
     "set-role": "tsx scripts/set-role.ts",
     "seed": "tsx src/db/seed.ts",

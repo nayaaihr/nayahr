@@ -7,6 +7,7 @@ export const tenant = pgTable("tenant", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: text("name").notNull(),
   country: text("country").notNull().default("IN"),
+  nameConfirmed: boolean("name_confirmed").notNull().default(true), // false until the client sets their own name
   clerkOrgId: text("clerk_org_id"), // maps a Clerk Organization -> tenant (Phase 2)
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });

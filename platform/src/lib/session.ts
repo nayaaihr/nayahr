@@ -50,7 +50,8 @@ async function provisionNewTenant(clerkUserId: string, email: string): Promise<A
   return db.transaction(async (tx) => {
     const tid = (await tx.execute(sql`select gen_random_uuid() as id`)).rows[0].id as string;
     await tx.execute(sql`select set_config('app.tenant', ${tid}, true)`);
-    await tx.execute(sql`insert into tenant (id, name, country) values (${tid}, ${companyFromEmail(email)}, 'IN')`);
+    // name_confirmed=false → the owner is prompted to set their real company name on first login.
+    await tx.execute(sql`insert into tenant (id, name, country, name_confirmed) values (${tid}, ${companyFromEmail(email)}, 'IN', false)`);
     const u = await tx.execute(sql`
       insert into app_user (tenant_id, email, role, clerk_user_id)
       values (${tid}, ${email}, 'owner', ${clerkUserId})
