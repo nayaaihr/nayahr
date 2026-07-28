@@ -1,0 +1,16 @@
+name,title,department,location,salary,hire date,email
+Rohan Mehta,Head of Engineering,Engineering,Bengaluru,3600000,10/02/21,rohan.mehta@acme.example
+Priya Nair,Senior Software Engineer,Engineering,Bengaluru,2200000,15/06/22,priya.nair@acme.example
+Arjun Rao,Software Engineer,Engineering,Hyderabad,1400000,01/09/23,arjun.rao@acme.example
+Sneha Iyer,QA Engineer,Engineering,Bengaluru,1200000,20/03/23,sneha.iyer@acme.example
+Ananya Gupta,Sales Manager,Sales,Delhi,1900000,03/04/21,ananya.gupta@acme.example
+Vikram Sethi,Account Executive,Sales,Mumbai,1100000,12/07/22,vikram.sethi@acme.example
+Karan Malhotra,Business Development Rep,Sales,Mumbai,850000,25/11/23,karan.malhotra@acme.example
+Divya Menon,HR Manager,HR,Bengaluru,1600000,09/01/22,divya.menon@acme.example
+Neha Jain,HR Generalist,HR,Pune,750000,18/08/22,neha.jain@acme.example
+Aditya Kulkarni,Marketing Lead,Marketing,Pune,1500000,14/05/22,aditya.kulkarni@acme.example
+Ritu Sharma,Content Specialist,Marketing,Remote,900000,22/02/23,ritu.sharma@acme.example
+Sanjay Verma,Finance Manager,Finance,Mumbai,1800000,07/03/21,sanjay.verma@acme.example
+Pooja Deshpande,Accountant,Finance,Pune,800000,30/10/23,pooja.deshpande@acme.example
+Manish Agarwal,Operations Lead,Operations,Delhi,1300000,11/06/22,manish.agarwal@acme.example
+Isha Kapoor,Customer Success Manager,Customer Success,Bengaluru,1250000,19/09/22,isha.kapoor@acme.example

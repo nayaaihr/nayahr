@@ -3,6 +3,7 @@ import { listRecruitment } from "@/repos/recruit";
 import { NewReq } from "./new-req";
 import { CandidateActions } from "./candidate-actions";
 import { ReqActionsMenu } from "./req-menu";
+import { ReqDescription } from "./req-description";
 import { AddCandidate } from "./add-candidate";
 
 export const dynamic = "force-dynamic";
@@ -63,7 +64,7 @@ export default async function RecruitPage() {
               <tr key={r.id}>
                 <td style={{ fontWeight: 600 }}>
                   {r.title}
-                  {r.description && <div style={{ fontWeight: 400, fontSize: 11.5, color: "var(--muted)", marginTop: 2, maxWidth: 320, whiteSpace: "normal", lineHeight: 1.4 }}>{r.description}</div>}
+                  {r.description && <ReqDescription text={r.description} />}
                 </td>
                 <td>{r.department ? <span className="pill">{r.department}</span> : "—"}</td>
                 <td>{r.location ?? "—"}</td>
