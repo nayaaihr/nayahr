@@ -12,6 +12,7 @@ export async function savePayrollDetailsAction(workerId: string, fd: FormData): 
     await updatePayrollDetails(await getSession(), workerId, {
       bankAccount: String(fd.get("bankAccount") ?? ""),
       bankIfsc: String(fd.get("bankIfsc") ?? ""),
+      upiId: String(fd.get("upiId") ?? ""),
       pan: String(fd.get("pan") ?? ""),
       uan: String(fd.get("uan") ?? ""),
     });

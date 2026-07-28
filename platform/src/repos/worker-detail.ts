@@ -10,7 +10,7 @@ export type JobEvent = {
   department: string | null; location: string | null; manager: string | null;
 };
 export type PendingChange = { id: string; effective_date: string; title: string; new_status: string };
-export type PayrollDetails = { bankAccount: string | null; bankIfsc: string | null; pan: string | null; uan: string | null };
+export type PayrollDetails = { bankAccount: string | null; bankIfsc: string | null; upiId: string | null; pan: string | null; uan: string | null };
 export type WorkerDetail = {
   person: PersonRow;
   jobHistory: JobEvent[];
@@ -76,13 +76,14 @@ export async function getWorkerDetail(s: Session, workerId: string): Promise<Wor
 }
 
 async function getPayrollDetails(s: Session, workerId: string): Promise<PayrollDetails> {
-  const empty: PayrollDetails = { bankAccount: null, bankIfsc: null, pan: null, uan: null };
+  const empty: PayrollDetails = { bankAccount: null, bankIfsc: null, upiId: null, pan: null, uan: null };
   try {
     return await withSession(s, async (tx) => {
-      const r = (await tx.execute(sql`select bank_account, bank_ifsc, pan, uan from worker where id = ${workerId} limit 1`)).rows as Array<Record<string, unknown>>;
+      const r = (await tx.execute(sql`select bank_account, bank_ifsc, upi_id, pan, uan from worker where id = ${workerId} limit 1`)).rows as Array<Record<string, unknown>>;
       const x = r[0] ?? {};
       return {
         bankAccount: (x.bank_account as string) ?? null, bankIfsc: (x.bank_ifsc as string) ?? null,
+        upiId: (x.upi_id as string) ?? null,
         pan: (x.pan as string) ?? null, uan: (x.uan as string) ?? null,
       };
     });
@@ -99,16 +100,18 @@ export async function updatePayrollDetails(s: Session, workerId: string, f: Payr
   const norm = (v: string | null) => { const t = (v ?? "").trim(); return t === "" ? null : t; };
   const bankAccount = norm(f.bankAccount);
   const bankIfsc = norm(f.bankIfsc)?.toUpperCase() ?? null;
+  const upiId = norm(f.upiId)?.toLowerCase() ?? null;
   const pan = norm(f.pan)?.toUpperCase() ?? null;
   const uan = norm(f.uan);
   if (bankAccount && !/^\d{6,20}$/.test(bankAccount)) throw new Error("Account number should be 6–20 digits.");
   if (bankIfsc && !/^[A-Z]{4}0[A-Z0-9]{6}$/.test(bankIfsc)) throw new Error("IFSC looks invalid (e.g. HDFC0001234).");
+  if (upiId && !/^[a-z0-9.\-_]{2,256}@[a-z]{2,64}$/.test(upiId)) throw new Error("UPI ID looks invalid (e.g. name@okhdfcbank).");
   if (pan && !/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(pan)) throw new Error("PAN looks invalid (e.g. ABCDE1234F).");
   if (uan && !/^\d{12}$/.test(uan)) throw new Error("UAN should be 12 digits.");
   await withSession(s, async (tx) => {
-    await tx.execute(sql`update worker set bank_account = ${bankAccount}, bank_ifsc = ${bankIfsc}, pan = ${pan}, uan = ${uan} where id = ${workerId} and tenant_id = ${s.tenantId}`);
+    await tx.execute(sql`update worker set bank_account = ${bankAccount}, bank_ifsc = ${bankIfsc}, upi_id = ${upiId}, pan = ${pan}, uan = ${uan} where id = ${workerId} and tenant_id = ${s.tenantId}`);
     await tx.execute(sql`insert into audit_log (tenant_id, actor_id, action, entity, entity_id, after) values (${s.tenantId}, ${s.userId}, 'payroll_details', 'worker', ${workerId},
-      ${JSON.stringify({ bankAccount: bankAccount ? "set" : null, bankIfsc: bankIfsc ? "set" : null, pan: pan ? "set" : null, uan: uan ? "set" : null })}::jsonb)`);
+      ${JSON.stringify({ bankAccount: bankAccount ? "set" : null, bankIfsc: bankIfsc ? "set" : null, upiId: upiId ? "set" : null, pan: pan ? "set" : null, uan: uan ? "set" : null })}::jsonb)`);
   });
 }
 

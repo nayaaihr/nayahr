@@ -42,6 +42,7 @@ export const worker = pgTable("worker", {
   // Payroll: bank + statutory identifiers (NH-105). Nullable — filled by HR over time.
   bankAccount: text("bank_account"),
   bankIfsc: text("bank_ifsc"),
+  upiId: text("upi_id"),
   pan: text("pan"),
   uan: text("uan"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

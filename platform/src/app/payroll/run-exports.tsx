@@ -34,7 +34,7 @@ export function RunExports({ runId }: { runId: string }) {
         className="btn ghost"
         disabled={pending}
         onClick={() => go(() => exportBankFileAction(runId), (r) => {
-          if (r.missing) alert(`${r.missing} employee(s) have no bank account / IFSC on file.\n\nAdd it under Bank & statutory on their profile, then export again.`);
+          if (r.missing) alert(`${r.missing} employee(s) have no payout method on file (no bank account/IFSC and no UPI ID).\n\nAdd one under Bank & statutory on their profile, then export again.`);
         })}
       >
         Bank file

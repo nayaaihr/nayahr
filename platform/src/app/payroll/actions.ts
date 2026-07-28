@@ -38,9 +38,12 @@ export async function exportBankFileAction(runId: string): Promise<ExportR> {
   try {
     const data = await getBankExport(await getSession(), runId);
     if (!data) return { ok: false, error: "Payroll run not found." };
-    const headers = ["Beneficiary Name", "Account Number", "IFSC", "Amount", "Payment Mode", "Remarks"];
+    const headers = ["Beneficiary Name", "Account Number", "IFSC", "UPI ID", "Amount", "Payment Mode", "Remarks"];
     const remark = `Salary ${periodLabel(data.period)}`;
-    const rows = data.rows.map((r) => [r.name, r.bankAccount ?? "", r.bankIfsc ?? "", money(r.net), "NEFT", remark]);
+    const rows = data.rows.map((r) => {
+      const mode = r.bankAccount && r.bankIfsc ? "NEFT" : r.upiId ? "UPI" : "MISSING";
+      return [r.name, r.bankAccount ?? "", r.bankIfsc ?? "", r.upiId ?? "", money(r.net), mode, remark];
+    });
     return { ok: true, filename: `bank-transfer-${data.period}.csv`, csv: toCsv(headers, rows), missing: data.missing };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "Export failed." };

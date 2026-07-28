@@ -121,27 +121,33 @@ export async function getRun(s: Session, runId: string): Promise<RunDetail | nul
 
 // ── NH-105: exports for a run ────────────────────────────────────────────────
 
-export type BankLine = { name: string; bankAccount: string | null; bankIfsc: string | null; net: number };
+export type BankLine = { name: string; bankAccount: string | null; bankIfsc: string | null; upiId: string | null; net: number };
 export type BankExport = { period: string; status: string; rows: BankLine[]; total: number; missing: number };
 
-/** Net-pay disbursement list for a bank NEFT upload. HR/Owner only. */
+/** True when a worker can be paid — bank account+IFSC, or a UPI ID. */
+export function hasPayout(l: { bankAccount: string | null; bankIfsc: string | null; upiId: string | null }): boolean {
+  return (!!l.bankAccount && !!l.bankIfsc) || !!l.upiId;
+}
+
+/** Net-pay disbursement list for a bank upload. Each employee is paid by NEFT
+ *  (account + IFSC) or, if that's absent, by UPI. HR/Owner only. */
 export async function getBankExport(s: Session, runId: string): Promise<BankExport | null> {
   if (!isHR(s)) return null;
   return withSession(s, async (tx) => {
     const rr = (await tx.execute(sql`select to_char(period,'YYYY-MM') as period, status from payroll_run where id = ${runId} limit 1`)).rows as Array<Record<string, unknown>>;
     if (!rr[0]) return null;
     const rows = (await tx.execute(sql`
-      select w.full_name as name, w.bank_account, w.bank_ifsc, p.net
+      select w.full_name as name, w.bank_account, w.bank_ifsc, w.upi_id, p.net
       from payslip p join worker w on w.id = p.worker_id
       where p.run_id = ${runId} order by w.full_name`)).rows as Array<Record<string, unknown>>;
     const lines: BankLine[] = rows.map((x) => ({
       name: x.name as string, bankAccount: (x.bank_account as string) ?? null,
-      bankIfsc: (x.bank_ifsc as string) ?? null, net: num(x.net),
+      bankIfsc: (x.bank_ifsc as string) ?? null, upiId: (x.upi_id as string) ?? null, net: num(x.net),
     }));
     return {
       period: rr[0].period as string, status: rr[0].status as string, rows: lines,
       total: lines.reduce((a, l) => a + l.net, 0),
-      missing: lines.filter((l) => !l.bankAccount || !l.bankIfsc).length,
+      missing: lines.filter((l) => !hasPayout(l)).length,
     };
   });
 }
