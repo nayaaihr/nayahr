@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
-import { getRun } from "@/repos/payroll";
+import { getRun, getRunPayouts } from "@/repos/payroll";
 import { getCompany } from "@/repos/company";
 import { rupee } from "@/lib/salary";
 import { periodLabel } from "@/lib/payroll";
@@ -18,7 +18,7 @@ const rt = { textAlign: "right" as const };
 export default async function RunPage({ params }: { params: { id: string } }) {
   const session = await getSession();
   if (!(session.role === "owner" || session.role === "hr_admin")) redirect("/");
-  const [run, company] = await Promise.all([getRun(session, params.id), getCompany(session)]);
+  const [run, company, payouts] = await Promise.all([getRun(session, params.id), getCompany(session), getRunPayouts(session, params.id)]);
 
   if (!run) {
     return (
@@ -79,7 +79,7 @@ export default async function RunPage({ params }: { params: { id: string } }) {
                 <td style={{ ...rt, color: "var(--muted)" }}>{rupee(s.pt)}</td>
                 <td style={{ ...rt, color: "var(--muted)" }}>{rupee(s.tds)}</td>
                 <td style={{ ...rt, fontWeight: 600 }}>{rupee(s.net)}</td>
-                <td style={rt}><PayslipView slip={s} period={run.period} company={company.name} /></td>
+                <td style={rt}><PayslipView slip={s} period={run.period} company={company.name} payout={payouts[s.worker_id]} /></td>
               </tr>
             ))}
           </tbody>

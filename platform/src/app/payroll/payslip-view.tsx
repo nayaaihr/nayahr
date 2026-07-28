@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { rupee } from "@/lib/salary";
 import { periodLabel, daysInPeriod } from "@/lib/payroll";
+import { payoutMethod, type PayoutSource } from "@/lib/payout";
 import type { PayslipRow } from "@/repos/payroll";
 
 const Row = ({ label, value, strong = false, muted = false, bottom = false }: { label: string; value: string; strong?: boolean; muted?: boolean; bottom?: boolean }) => (
@@ -11,8 +12,9 @@ const Row = ({ label, value, strong = false, muted = false, bottom = false }: { 
   </div>
 );
 
-export function PayslipView({ slip, period, company }: { slip: PayslipRow; period: string; company: string }) {
+export function PayslipView({ slip, period, company, payout }: { slip: PayslipRow; period: string; company: string; payout?: PayoutSource }) {
   const [open, setOpen] = useState(false);
+  const pay = payout ? payoutMethod(payout) : null;
   return (
     <>
       <button className="btn ghost sm" onClick={() => setOpen(true)}>Payslip</button>
@@ -59,6 +61,13 @@ export function PayslipView({ slip, period, company }: { slip: PayslipRow; perio
                 <span style={{ fontWeight: 650, color: "var(--brand-deep)" }}>Net pay</span>
                 <span style={{ fontWeight: 800, fontSize: 20, color: "var(--brand-deep)" }}>{rupee(slip.net)}</span>
               </div>
+
+              {pay && (
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12, marginTop: 10, fontSize: 12.5 }}>
+                  <span style={{ fontWeight: 600, color: "var(--muted)" }}>Paid by</span>
+                  <span style={{ textAlign: "right", color: pay.mode === "none" ? "var(--red)" : "var(--ink)", wordBreak: "break-all" }}>{pay.label}</span>
+                </div>
+              )}
 
               <div style={{ marginTop: 16, fontSize: 12, color: "var(--muted)" }}>
                 <div style={{ fontWeight: 700, textTransform: "uppercase", letterSpacing: ".04em", marginBottom: 4 }}>Employer contributions</div>

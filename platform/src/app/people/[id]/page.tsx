@@ -123,7 +123,7 @@ export default async function WorkerPage({ params }: { params: { id: string } })
                   <td style={{ textAlign: "right" }}>{rupee(s.gross)}</td>
                   <td style={{ textAlign: "right", color: "var(--muted)" }}>− {rupee(s.total_deductions)}</td>
                   <td style={{ textAlign: "right", fontWeight: 600 }}>{rupee(s.net)}</td>
-                  <td style={{ textAlign: "right" }}><PayslipView slip={s} period={s.period} company={company.name} /></td>
+                  <td style={{ textAlign: "right" }}><PayslipView slip={s} period={s.period} company={company.name} payout={d.payroll} /></td>
                 </tr>
               ))}
             </tbody>

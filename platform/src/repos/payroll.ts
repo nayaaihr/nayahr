@@ -152,6 +152,29 @@ export async function getBankExport(s: Session, runId: string): Promise<BankExpo
   });
 }
 
+export type WorkerPayout = { bankAccount: string | null; bankIfsc: string | null; upiId: string | null };
+
+/** Payout details for every worker in a run, keyed by worker_id. Resilient: if
+ *  the bank columns aren't migrated yet, returns {} so the run page still renders. */
+export async function getRunPayouts(s: Session, runId: string): Promise<Record<string, WorkerPayout>> {
+  if (!isHR(s)) return {};
+  try {
+    return await withSession(s, async (tx) => {
+      const rows = (await tx.execute(sql`
+        select p.worker_id, w.bank_account, w.bank_ifsc, w.upi_id
+        from payslip p join worker w on w.id = p.worker_id
+        where p.run_id = ${runId}`)).rows as Array<Record<string, unknown>>;
+      const map: Record<string, WorkerPayout> = {};
+      for (const x of rows) map[x.worker_id as string] = {
+        bankAccount: (x.bank_account as string) ?? null, bankIfsc: (x.bank_ifsc as string) ?? null, upiId: (x.upi_id as string) ?? null,
+      };
+      return map;
+    });
+  } catch {
+    return {};
+  }
+}
+
 export type StatutoryLine = { name: string; pan: string | null; uan: string | null; gross: number; pfEmployee: number; employerPf: number; esiEmployee: number; employerEsi: number; pt: number; tds: number };
 export type StatutoryTotals = { gross: number; pfEmployee: number; employerPf: number; esiEmployee: number; employerEsi: number; pt: number; tds: number };
 export type StatutorySummary = { period: string; status: string; rows: StatutoryLine[]; totals: StatutoryTotals };
