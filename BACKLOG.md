@@ -62,12 +62,11 @@ Added bank/statutory identifiers (bank a/c, IFSC, PAN, UAN) on each employee (HR
 ### NH-106 · Payroll correction / un-finalize — P2 · M · ✅ Done (Jul 2026)
 A finalized run can be **Reopened to Draft** (audited; payslips hide from employees again), corrected, **Regenerated** (recomputes every payslip from current salary / leave / joining dates), and re-finalized. No new migration.
 
-### NH-107 · CSV import robustness + preview — P2 · M
-Quoted-field support; a validate/preview step before commit.
-**Done when:** commas-in-values import correctly and the user sees a row preview + errors before importing.
+### NH-107 · CSV import robustness + preview — P2 · M · ✅ Done (Jul 2026)
+RFC-4180 CSV parser (quoted fields, embedded commas, escaped quotes, newlines-in-quotes) in `lib/import-parse.ts`, shared by the importer and a new **preview** step: HR sees the parsed rows + per-row warnings (bad date/salary/email) and confirms before anything is written. Same parse path powers preview and import, so what you see is what imports.
 
-### NH-108 · Automated tests (payroll math + RLS) — P2 · M
-**Done when:** CI runs unit tests for the statutory calc and an isolation test for RLS.
+### NH-108 · Automated tests (payroll math + RLS) — P2 · M · 🔵 Mostly done (Jul 2026)
+Vitest (`npm test`) with 31 unit tests: statutory payroll math (proration, LOP, PF, ESI ceiling, new-regime TDS + 87A + cess), CTC breakdown, payout-method derivation, CSV escaping, and roster parsing/date-normalisation. RLS isolation is covered by the `rls:verify` script (10/10 on prod). _Remaining: wire both into CI (needs a CI test DB for the RLS integration check)._
 
 ---
 
