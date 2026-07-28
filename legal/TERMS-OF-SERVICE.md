@@ -1,10 +1,10 @@
 # NayaHR — Terms of Service
 
-> **DRAFT for legal review.** Working draft for an India-based B2B SaaS. Not legal advice — have qualified Indian legal counsel finalise the commercial and liability terms before use. Bracketed **[CONFIRM: …]** items are business decisions you should set.
+> **DRAFT for legal review.** Working draft for an India-based B2B SaaS. Not legal advice — have qualified Indian legal counsel finalise the commercial and liability terms before use. Bracketed **[…]** items are facts to be filled at finalisation.
 
-**Effective date:** [CONFIRM: go-live date] · **Last updated:** 28 July 2026
+**Effective date:** [Effective date — set on publication] · **Last updated:** 28 July 2026
 
-These Terms of Service ("**Terms**") are a legal agreement between **NayaHR Private Limited**, [CONFIRM: registered address], Pune, Maharashtra, India ("**NayaHR**", "we", "us"), and the business entity that subscribes to or uses the Service ("**Customer**", "you"). By creating an account, accepting an invitation, or using the Service, you agree to these Terms. If you accept on behalf of a company, you confirm you are authorised to bind it.
+These Terms of Service ("**Terms**") are a legal agreement between **NayaHR Private Limited**, [Registered address], Pune, Maharashtra, India ("**NayaHR**", "we", "us"), and the business entity that subscribes to or uses the Service ("**Customer**", "you"). By creating an account, accepting an invitation, or using the Service, you agree to these Terms. If you accept on behalf of a company, you confirm you are authorised to bind it.
 
 ---
 
@@ -26,23 +26,23 @@ You are responsible for: (a) the accuracy, quality and legality of Customer Data
 
 ## 5. Fees & payment
 
-5.1 Fees are as set out in your order or our published pricing. Billing is **[CONFIRM: monthly / annual], on a per-employee basis**.
+5.1 Fees are as set out in your order or our published pricing. Billing is on a **per-employee** basis, charged **monthly**, with an optional **annual prepay** at a discount.
 
 5.2 Fees are exclusive of taxes; you are responsible for applicable **GST** and other taxes.
 
-5.3 [CONFIRM: payment terms — e.g. due in advance; invoices payable within [X] days; accepted payment methods.]
+5.3 Fees are **invoiced in advance** and payable within **15 days** of the invoice date by bank transfer, NEFT or UPI. NayaHR does **not** collect or store card details.
 
-5.4 **Refunds:** [CONFIRM: refund/cancellation policy — e.g. fees are non-refundable except as required by law / pro-rata on annual plans, etc.]
+5.4 **Refunds:** fees are **non-refundable** except where a refund is required by law. You may **cancel at any time** to stop future renewals; the Service continues until the end of the current paid period.
 
 5.5 We may suspend the Service for undisputed overdue amounts after reasonable notice.
 
 ## 6. Subscription term, renewal & cancellation
 
-The subscription runs for the term stated in your order and [CONFIRM: renews automatically for successive periods unless cancelled with [X] days' notice / does not auto-renew]. On cancellation, the Service continues until the end of the paid period. Data handling on termination is per Section 11 and the DPA.
+The subscription runs for the term stated in your order and **renews automatically** for successive periods of the same length unless either party cancels with at least **30 days'** notice before the end of the current term. On cancellation, the Service continues until the end of the paid period. Data handling on termination is per Section 11 and the DPA.
 
 ## 7. Data protection
 
-Our handling of personal data is governed by our **[Privacy Policy](PRIVACY-POLICY.md)** and, for Employee Personal Data, our **[Data Processing Agreement](DATA-PROCESSING-AGREEMENT.md)**, each incorporated into these Terms by reference. Where you act as Data Fiduciary for your employees, NayaHR acts as your Data Processor.
+Our handling of personal data is governed by our **Privacy Policy** and, for Employee Personal Data, our **Data Processing Agreement (DPA)**, each incorporated into these Terms by reference. Where you act as Data Fiduciary for your employees, NayaHR acts as your Data Processor.
 
 ## 8. Intellectual property
 
@@ -54,11 +54,11 @@ Each party will protect the other's non-public information disclosed under these
 
 ## 10. Service availability
 
-We aim to keep the Service available and target **[CONFIRM: e.g. 99.9%] uptime**, excluding scheduled maintenance and events beyond our reasonable control. [CONFIRM: whether any service-credit/SLA remedy applies — if none, state "no service credits are offered at this time".]
+We aim to keep the Service available and **target 99.9% uptime**, excluding scheduled maintenance and events beyond our reasonable control. **No service credits are offered at this time.**
 
 ## 11. Suspension & termination
 
-Either party may terminate for material breach not cured within [CONFIRM: e.g. 30] days' notice. We may suspend or limit access to address a security risk, unlawful use, or non-payment. On termination, your right to use the Service ends and Customer Data is handled per the **DPA** (export, then deletion within a **30–90 day** grace period).
+Either party may terminate for material breach not cured within **30 days'** notice. We may suspend or limit access to address a security risk, unlawful use, or non-payment. On termination, your right to use the Service ends and Customer Data is handled per the **DPA** (export, then deletion within a **30–90 day** grace period).
 
 ## 12. Warranties & disclaimers
 
@@ -66,23 +66,23 @@ We will provide the Service with reasonable skill and care. Except as expressly 
 
 ## 13. Limitation of liability
 
-To the maximum extent permitted by law, neither party is liable for indirect, incidental, special or consequential damages, or loss of profits or data. Each party's **total aggregate liability** arising out of or related to the Agreement is limited to **[CONFIRM: e.g. the fees paid by the Customer in the 12 months preceding the claim]**. Nothing limits liability that cannot be limited by law.
+To the maximum extent permitted by law, neither party is liable for indirect, incidental, special or consequential damages, or loss of profits or data. Each party's **total aggregate liability** arising out of or related to the Agreement is limited to **the fees paid by the Customer in the 6 months preceding the claim**. Nothing limits liability that cannot be limited by law.
 
 ## 14. Indemnity
 
-[CONFIRM with counsel] You will indemnify NayaHR against third-party claims arising from your Customer Data or your unlawful use of the Service; NayaHR will indemnify you against third-party claims that the Service infringes IP rights, subject to standard conditions and the liability cap in Section 13.
+You will indemnify NayaHR against third-party claims arising from your Customer Data or your unlawful use of the Service. NayaHR will indemnify you against third-party claims that the Service, as provided, infringes a third party's intellectual-property rights, provided you notify us promptly and allow us to control the defence. Both indemnities are subject to the limitation of liability in Section 13.
 
 ## 15. Changes
 
 We may modify the Service or these Terms. For material changes to these Terms, we will give reasonable notice (through the Service or by email). Continued use after changes take effect constitutes acceptance.
 
-## 16. Governing law & jurisdiction
+## 16. Governing law & dispute resolution
 
-These Terms are governed by the laws of India. The courts at **Pune, Maharashtra** have exclusive jurisdiction, subject to any applicable arbitration agreement. [CONFIRM: whether to add an arbitration clause.]
+These Terms are governed by the laws of India. Any dispute arising out of or in connection with these Terms shall be finally resolved by **arbitration** under the Arbitration and Conciliation Act, 1996, before a **sole arbitrator** appointed by mutual agreement, with the **seat and venue at Pune, Maharashtra**, conducted in English. The courts at **Pune, Maharashtra** retain jurisdiction for interim relief and enforcement of the award.
 
 ## 17. Notices & grievances
 
-Notices to NayaHR: **hello@nayahr.in**. Grievance Officer / data queries: **Charu Tripathi, hello@nayahr.in**, NayaHR Private Limited, [CONFIRM: registered address], Pune, Maharashtra, India.
+Notices to NayaHR: **hello@nayahr.in**. Grievance Officer / data queries: **Charu Tripathi, hello@nayahr.in**, NayaHR Private Limited, [Registered address], Pune, Maharashtra, India.
 
 ## 18. General
 

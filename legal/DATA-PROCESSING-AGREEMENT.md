@@ -1,10 +1,10 @@
 # NayaHR — Data Processing Agreement (DPA)
 
-> **DRAFT for legal review.** Working draft aligned to India's Digital Personal Data Protection Act, 2023 (**DPDP Act**). Not legal advice — have qualified Indian legal counsel finalise before use. Bracketed **[CONFIRM: …]** items need input.
+> **DRAFT for legal review.** Working draft aligned to India's Digital Personal Data Protection Act, 2023 (**DPDP Act**). Not legal advice — have qualified Indian legal counsel finalise before use. Bracketed **[…]** items are facts to be filled at finalisation.
 
 This Data Processing Agreement ("**DPA**") forms part of, and is subject to, the Terms of Service or other master agreement (the "**Agreement**") between:
 
-- **NayaHR Private Limited**, [CONFIRM: registered address], Pune, Maharashtra, India ("**NayaHR**", the **Data Processor**); and
+- **NayaHR Private Limited**, [Registered address], Pune, Maharashtra, India ("**NayaHR**", the **Data Processor**); and
 - the customer identified in the Agreement (the "**Customer**", the **Data Fiduciary**).
 
 **Effective date:** the effective date of the Agreement.

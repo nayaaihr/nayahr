@@ -1,10 +1,10 @@
 # NayaHR — Privacy Policy
 
-> **DRAFT for legal review.** Prepared as a working draft aligned to India's Digital Personal Data Protection Act, 2023 (**DPDP Act**). This is not legal advice — have it reviewed and finalised by qualified Indian legal counsel before publishing. Bracketed **[CONFIRM: …]** items need your or your lawyer's input.
+> **DRAFT for legal review.** Prepared as a working draft aligned to India's Digital Personal Data Protection Act, 2023 (**DPDP Act**). This is not legal advice — have it reviewed and finalised by qualified Indian legal counsel before publishing. Bracketed **[…]** items are facts to be filled at finalisation.
 
 **NayaHR Private Limited** ("NayaHR", "we", "us", "our")
-Registered office: [CONFIRM: registered street address], Pune, Maharashtra, India · CIN: [CONFIRM: CIN]
-**Effective date:** [CONFIRM: go-live date] · **Last updated:** 28 July 2026
+Registered office: [Registered address], Pune, Maharashtra, India · CIN: [CIN]
+**Effective date:** [Effective date — set on publication] · **Last updated:** 28 July 2026
 
 ---
 
@@ -22,7 +22,7 @@ We handle personal data in **two capacities**:
 **Account & administrator users (we are the Fiduciary):**
 - Identity & contact: name, work email, phone (optional), job title, employer/company name.
 - Authentication: credentials and identifiers managed by our auth provider (Clerk), including Google sign-in identifiers where used.
-- Billing: business billing contact and transaction records. [CONFIRM: whether card data is handled solely by a payment provider — if so, we do not store card numbers.]
+- Billing: business billing contact and transaction records. We do **not** collect or store card numbers; fees are invoiced and paid by bank transfer or UPI.
 - Support & communications: messages you send us.
 
 **Employee data (we are the Processor, on the customer's instruction):**
@@ -88,7 +88,7 @@ For any question, request, or grievance regarding personal data:
 
 **Grievance Officer:** Charu Tripathi
 **Email:** hello@nayahr.in
-**NayaHR Private Limited**, [CONFIRM: registered address], Pune, Maharashtra, India
+**NayaHR Private Limited**, [Registered address], Pune, Maharashtra, India
 
 ## 12. Changes
 
