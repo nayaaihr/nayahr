@@ -9,6 +9,7 @@
     "start": "next start",
     "test": "vitest run",
     "test:watch": "vitest",
+    "legal:build": "python3 ../legal/build_web.py && python3 ../legal/build_pdfs.py",
     "db:migrate": "tsx scripts/migrate.ts",
     "db:apply": "tsx scripts/apply.ts",
     "db:cleanup": "tsx scripts/cleanup-orphan-tenants.ts",
