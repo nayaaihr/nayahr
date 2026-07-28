@@ -1,9 +1,13 @@
 "use client";
 
+import { useEffect } from "react";
+import * as Sentry from "@sentry/nextjs";
+
 // Last-resort boundary for errors thrown in the root layout itself (which the
 // page-level error.tsx can't catch). Renders its own <html>/<body>, so all
 // styles are inline.
 export default function GlobalError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
+  useEffect(() => { Sentry.captureException(error); }, [error]); // no-op without a DSN
   return (
     <html lang="en">
       <body style={{ margin: 0, fontFamily: "Arial, Helvetica, sans-serif", background: "#f5f5f7" }}>

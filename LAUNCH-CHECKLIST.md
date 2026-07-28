@@ -28,7 +28,7 @@ _Last updated: July 2026._
 
 - [x] **[Eng] Payroll bank export + statutory summary.** ✅ A payroll run now exports a **Bank file** (NEFT CSV of net pay) and a **Statutory summary** (PF/ESI/PT/TDS per employee + totals). Bank a/c, IFSC, PAN, UAN captured per employee on their profile. _(NH-105.)_
 - [x] **[Eng] Payroll correction / un-finalize path.** ✅ A finalized run can be **Reopened to Draft**, corrected, **Regenerated** from current data, and re-finalized (audited). _(NH-106.)_
-- [ ] **[Biz/Eng] Error tracking + uptime monitoring** (e.g. Sentry + a status ping) — know it broke before the client does. _(Needs a Sentry account + DSN.)_
+- [~] **[Biz/Eng] Error tracking + uptime monitoring.** ✅ Code done: Sentry wired (client/server/edge, no-op until a DSN is set) + a `/api/health` DB probe. _Left for you: create a free Sentry project → add `NEXT_PUBLIC_SENTRY_DSN` (+ `SENTRY_DSN`) in Vercel; point a free uptime monitor at `https://app.nayahr.in/api/health`._
 - [x] **[Eng] CSV import: quoted-field support + a preview/validate step.** ✅ RFC-4180 parser + a preview showing parsed rows & per-row warnings before commit. _(NH-107.)_
 - [x] **[Eng] Automated tests on the two things that must never silently break.** ✅ 31 Vitest unit tests on the statutory payroll math (+ helpers & roster parsing); tenant isolation covered by `rls:verify`. _(NH-108 — CI wiring pending.)_
 
