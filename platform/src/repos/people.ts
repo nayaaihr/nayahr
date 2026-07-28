@@ -71,7 +71,7 @@ export async function listPeople(
       left join location  l on l.id = cj.location_id
       left join worker    mgr on mgr.id = cj.manager_id
       where ${scope} = 'org'
-         or (${scope} = 'team' and cj.manager_id = ${me}::uuid)
+         or (${scope} = 'team' and (cj.manager_id = ${me}::uuid or cj.worker_id = ${me}::uuid))
          or (${scope} = 'self' and cj.worker_id = ${me}::uuid)
       order by cj.full_name
     `);

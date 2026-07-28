@@ -98,10 +98,29 @@ export async function getSession(): Promise<Session> {
   const appUser = claimed ?? (canSelfProvision(email) ? await provisionNewTenant(userId, email) : null);
   if (!appUser) throw new NoWorkspaceError();
 
-  const realRole = appUser.role as Role;
+  let realRole = appUser.role as Role;
   let role = realRole;
   let workerId = appUser.worker_id ?? null;
   const tenantId = appUser.tenant_id;
+
+  // Anyone who manages at least one active report is a manager — even if their
+  // app_user role is 'employee' (invited employees default to employee, so a
+  // team lead wouldn't otherwise see their reports).
+  if (role === "employee" && workerId) {
+    const isMgr = await db.transaction(async (tx) => {
+      await tx.execute(sql`select set_config('app.tenant', ${tenantId}, true)`);
+      const r = await tx.execute(sql`
+        select exists(
+          select 1 from (
+            select distinct on (worker_id) manager_id, employment_status
+            from job_event where effective_date <= current_date
+            order by worker_id, effective_date desc, seq desc
+          ) cj where cj.manager_id = ${workerId} and cj.employment_status = 'Active'
+        ) as m`);
+      return (r.rows[0] as { m: boolean }).m;
+    });
+    if (isMgr) { realRole = "manager"; role = "manager"; }
+  }
 
   if (process.env.NODE_ENV !== "production") {
     // DEV scope testing on the seeded demo tenant — `dev_role` cookie / DEV_ROLE env,
