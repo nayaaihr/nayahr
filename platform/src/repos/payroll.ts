@@ -63,40 +63,83 @@ export async function listRuns(s: Session): Promise<RunRow[]> {
   });
 }
 
+type PayrollInputs = { active: Awaited<ReturnType<typeof listPeople>>; unpaid: Map<string, number> };
+
+/** The people to pay + their unpaid-leave days for a month. Read outside the
+ *  write transaction (shared by create + regenerate). */
+async function payrollInputs(s: Session, period: string): Promise<PayrollInputs> {
+  const active = (await listPeople(s)).filter((p) => p.employment_status === "Active" && p.salary);
+  const unpaid = new Map<string, number>();
+  (await listLeave(s))
+    .filter((l) => l.status === "Approved" && l.type === "Loss of Pay" && String(l.from_date).slice(0, 7) === period)
+    .forEach((l) => unpaid.set(l.worker_id, (unpaid.get(l.worker_id) ?? 0) + Number(l.days)));
+  return { active, unpaid };
+}
+
+/** Compute + insert a payslip for each employed worker; returns how many were paid.
+ *  Runs inside an open transaction. */
+async function insertPayslips(s: Session, tx: Parameters<Parameters<typeof withSession>[1]>[0], runId: string, period: string, { active, unpaid }: PayrollInputs): Promise<number> {
+  const dim = daysInPeriod(period);
+  const [py, pm] = period.split("-").map(Number);
+  let paid = 0;
+  for (const p of active) {
+    const employedDays = employedDaysInMonth(String(p.hired_on), py, pm, dim);
+    if (employedDays <= 0) continue; // hired after this month — not on this payroll
+    const c = computePay(Number(p.salary), unpaid.get(p.worker_id) ?? 0, dim, employedDays);
+    await tx.execute(sql`insert into payslip
+      (tenant_id, run_id, worker_id, basic, hra, conveyance, special, gross, paid_days, lop_days, lop, pf_employee, esi_employee, pt, tds, employer_pf, employer_esi, total_deductions, net)
+      values (${s.tenantId}, ${runId}, ${p.worker_id}, ${c.basic}, ${c.hra}, ${c.conveyance}, ${c.special}, ${c.gross}, ${c.paidDays}, ${c.lopDays}, ${c.lop}, ${c.pfEmployee}, ${c.esiEmployee}, ${c.pt}, ${c.tds}, ${c.employerPf}, ${c.employerEsi}, ${c.totalDeductions}, ${c.net})`);
+    paid++;
+  }
+  return paid;
+}
+
 /** Create a draft run for a "YYYY-MM" month: snapshot a payslip for every active,
  *  salaried employee, prorating LOP from approved "Loss of Pay" leave that month. */
 export async function createRun(s: Session, period: string): Promise<string> {
   if (!isHR(s)) throw new Error("Only HR can run payroll.");
   if (!/^\d{4}-\d{2}$/.test(period)) throw new Error("Pick a valid month.");
   const first = `${period}-01`;
-  const dim = daysInPeriod(period);
-  const [py, pm] = period.split("-").map(Number);
-
-  const active = (await listPeople(s)).filter((p) => p.employment_status === "Active" && p.salary);
-  if (active.length === 0) throw new Error("No active employees with salary on file to pay.");
-
-  const unpaid = new Map<string, number>();
-  (await listLeave(s))
-    .filter((l) => l.status === "Approved" && l.type === "Loss of Pay" && String(l.from_date).slice(0, 7) === period)
-    .forEach((l) => unpaid.set(l.worker_id, (unpaid.get(l.worker_id) ?? 0) + Number(l.days)));
+  const inputs = await payrollInputs(s, period);
+  if (inputs.active.length === 0) throw new Error("No active employees with salary on file to pay.");
 
   return withSession(s, async (tx) => {
     const dupe = (await tx.execute(sql`select id from payroll_run where period = ${first}::date limit 1`)).rows as Array<{ id: string }>;
     if (dupe[0]) throw new Error(`Payroll for ${period} already exists — open it instead.`);
     const run = (await tx.execute(sql`insert into payroll_run (tenant_id, period, status, created_by) values (${s.tenantId}, ${first}::date, 'Draft', ${s.userId}) returning id`)).rows[0] as { id: string };
-    let paid = 0;
-    for (const p of active) {
-      const employedDays = employedDaysInMonth(String(p.hired_on), py, pm, dim);
-      if (employedDays <= 0) continue; // hired after this month — not on this payroll
-      const c = computePay(Number(p.salary), unpaid.get(p.worker_id) ?? 0, dim, employedDays);
-      await tx.execute(sql`insert into payslip
-        (tenant_id, run_id, worker_id, basic, hra, conveyance, special, gross, paid_days, lop_days, lop, pf_employee, esi_employee, pt, tds, employer_pf, employer_esi, total_deductions, net)
-        values (${s.tenantId}, ${run.id}, ${p.worker_id}, ${c.basic}, ${c.hra}, ${c.conveyance}, ${c.special}, ${c.gross}, ${c.paidDays}, ${c.lopDays}, ${c.lop}, ${c.pfEmployee}, ${c.esiEmployee}, ${c.pt}, ${c.tds}, ${c.employerPf}, ${c.employerEsi}, ${c.totalDeductions}, ${c.net})`);
-      paid++;
-    }
+    const paid = await insertPayslips(s, tx, run.id, period, inputs);
     if (paid === 0) throw new Error("No employees were employed during this month.");
     await tx.execute(sql`insert into audit_log (tenant_id, actor_id, action, entity, entity_id, after) values (${s.tenantId}, ${s.userId}, 'payroll_run', 'payroll_run', ${run.id}, ${JSON.stringify({ period, headcount: paid })}::jsonb)`);
     return run.id;
+  });
+}
+
+/** Reopen a finalized run back to Draft so HR can correct it (NH-106). Payslips
+ *  stay put but are hidden from employees again until the run is re-finalized. */
+export async function reopenRun(s: Session, runId: string): Promise<void> {
+  if (!isHR(s)) throw new Error("Only HR can reopen payroll.");
+  await withSession(s, async (tx) => {
+    const res = await tx.execute(sql`update payroll_run set status='Draft', finalized_by=null, finalized_at=null where id=${runId} and status='Finalized'`);
+    if (res.rowCount === 0) throw new Error("This payroll isn't finalized.");
+    await tx.execute(sql`insert into audit_log (tenant_id, actor_id, action, entity, entity_id, after) values (${s.tenantId}, ${s.userId}, 'payroll_reopen', 'payroll_run', ${runId}, ${JSON.stringify({ status: "Draft" })}::jsonb)`);
+  });
+}
+
+/** Recompute a draft run's payslips from current salary / leave / proration.
+ *  Use after reopening + fixing the underlying data. */
+export async function regenerateRun(s: Session, runId: string): Promise<void> {
+  if (!isHR(s)) throw new Error("Only HR can regenerate payroll.");
+  const meta = (await withSession(s, async (tx) =>
+    (await tx.execute(sql`select status, to_char(period,'YYYY-MM') as period from payroll_run where id=${runId} limit 1`)).rows as Array<{ status: string; period: string }>,
+  ))[0];
+  if (!meta) throw new Error("Payroll run not found.");
+  if (meta.status !== "Draft") throw new Error("Only a draft payroll can be regenerated — reopen it first.");
+  const inputs = await payrollInputs(s, meta.period);
+  await withSession(s, async (tx) => {
+    await tx.execute(sql`delete from payslip where run_id=${runId}`);
+    const paid = await insertPayslips(s, tx, runId, meta.period, inputs);
+    if (paid === 0) throw new Error("No employees were employed during this month.");
+    await tx.execute(sql`insert into audit_log (tenant_id, actor_id, action, entity, entity_id, after) values (${s.tenantId}, ${s.userId}, 'payroll_regenerate', 'payroll_run', ${runId}, ${JSON.stringify({ period: meta.period, headcount: paid })}::jsonb)`);
   });
 }
 

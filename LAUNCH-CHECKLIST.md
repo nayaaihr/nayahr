@@ -27,7 +27,7 @@ _Last updated: July 2026._
 ## 🟡 Strongly recommended — before the 2nd/3rd client
 
 - [x] **[Eng] Payroll bank export + statutory summary.** ✅ A payroll run now exports a **Bank file** (NEFT CSV of net pay) and a **Statutory summary** (PF/ESI/PT/TDS per employee + totals). Bank a/c, IFSC, PAN, UAN captured per employee on their profile. _(NH-105.)_
-- [ ] **[Eng] Payroll correction / un-finalize path.** Finalize is one-way today; mistakes need a real fix (reversal or next-run adjustment).
+- [x] **[Eng] Payroll correction / un-finalize path.** ✅ A finalized run can be **Reopened to Draft**, corrected, **Regenerated** from current data, and re-finalized (audited). _(NH-106.)_
 - [ ] **[Biz/Eng] Error tracking + uptime monitoring** (e.g. Sentry + a status ping) — know it broke before the client does.
 - [ ] **[Eng] CSV import: quoted-field support + a preview/validate step** — smoother, safer onboarding.
 - [ ] **[Eng] Automated tests on the two things that must never silently break:** statutory payroll math and tenant isolation.

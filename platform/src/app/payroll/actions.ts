@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/session";
-import { createRun, finalizeRun, deleteRun, getBankExport, getStatutorySummary } from "@/repos/payroll";
+import { createRun, finalizeRun, deleteRun, reopenRun, regenerateRun, getBankExport, getStatutorySummary } from "@/repos/payroll";
 import { periodLabel } from "@/lib/payroll";
 import { toCsv } from "@/lib/csv";
 
@@ -32,6 +32,8 @@ async function run(fn: () => Promise<void>): Promise<R> {
 
 export async function finalizeRunAction(runId: string): Promise<R> { return run(async () => finalizeRun(await getSession(), runId)); }
 export async function deleteRunAction(runId: string): Promise<R> { return run(async () => deleteRun(await getSession(), runId)); }
+export async function reopenRunAction(runId: string): Promise<R> { return run(async () => reopenRun(await getSession(), runId)); }
+export async function regenerateRunAction(runId: string): Promise<R> { return run(async () => regenerateRun(await getSession(), runId)); }
 
 /** Bank NEFT upload file: one row per employee with net pay. */
 export async function exportBankFileAction(runId: string): Promise<ExportR> {

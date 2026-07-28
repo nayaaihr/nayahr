@@ -59,9 +59,8 @@ Neon paid + verified PITR; prod DB in **Mumbai** region; error tracking + uptime
 ### NH-105 · Payroll bank export + statutory summary — P1 · M · ✅ Done (Jul 2026)
 Added bank/statutory identifiers (bank a/c, IFSC, PAN, UAN) on each employee (HR-editable under **Bank & statutory** on the profile), and two CSV exports on a payroll run: a **Bank file** (Beneficiary / Account / IFSC / Amount / NEFT / Remarks — flags anyone missing bank details) and a **Statutory summary** (PF/ESI/PT/TDS per employee + a totals row). Migration `0019_worker_payroll_details.sql`.
 
-### NH-106 · Payroll correction / un-finalize — P2 · M
-Finalize is one-way today.
-**Done when:** HR can correct a finalized run via a reversal or an audited next-run adjustment.
+### NH-106 · Payroll correction / un-finalize — P2 · M · ✅ Done (Jul 2026)
+A finalized run can be **Reopened to Draft** (audited; payslips hide from employees again), corrected, **Regenerated** (recomputes every payslip from current salary / leave / joining dates), and re-finalized. No new migration.
 
 ### NH-107 · CSV import robustness + preview — P2 · M
 Quoted-field support; a validate/preview step before commit.
