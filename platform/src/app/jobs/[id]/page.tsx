@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getPublicJob } from "@/repos/public-jobs";
 import { ShareLinkedIn } from "@/app/share-linkedin";
+import { JobDescription } from "./job-description";
 
 export const dynamic = "force-dynamic";
 
@@ -30,7 +31,7 @@ export default async function JobPage({ params }: { params: { id: string } }) {
       <span className="pill green">We&apos;re hiring</span>
       <h1>{job.title}</h1>
       <div className="job-meta">{meta}</div>
-      {job.description && <p className="job-desc">{job.description}</p>}
+      {job.description && <JobDescription text={job.description} />}
       <div className="job-cta">
         <ShareLinkedIn reqId={params.id} primary />
       </div>
