@@ -83,7 +83,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
           {/* Signed out → clean, centered auth page (no sidebar/nav leaking in). */}
           <SignedOut>
-            <div className="auth-shell">{children}</div>
+            <div className="auth-shell">
+              {children}
+              <footer style={{ position: "fixed", bottom: 0, left: 0, right: 0, textAlign: "center", padding: "16px", fontSize: 12.5, color: "#6b6b70" }}>
+                <a href="https://nayahr.in/privacy" style={{ color: "#6b6b70", textDecoration: "none" }}>Privacy</a>
+                <span style={{ margin: "0 8px" }}>·</span>
+                <a href="https://nayahr.in/terms" style={{ color: "#6b6b70", textDecoration: "none" }}>Terms</a>
+              </footer>
+            </div>
           </SignedOut>
         </body>
       </html>
