@@ -15,6 +15,7 @@ export type RunRow = {
 export type PayslipRow = {
   id: string; worker_id: string; name: string;
   basic: number; hra: number; conveyance: number; special: number; gross: number;
+  paid_days: number | null;
   lop_days: number; lop: number; pf_employee: number; esi_employee: number; pt: number; tds: number;
   employer_pf: number; employer_esi: number; total_deductions: number; net: number;
 };
@@ -23,10 +24,21 @@ function toSlip(x: Record<string, unknown>): PayslipRow {
   return {
     id: x.id as string, worker_id: x.worker_id as string, name: x.name as string,
     basic: num(x.basic), hra: num(x.hra), conveyance: num(x.conveyance), special: num(x.special), gross: num(x.gross),
+    paid_days: x.paid_days != null ? num(x.paid_days) : null,
     lop_days: num(x.lop_days), lop: num(x.lop), pf_employee: num(x.pf_employee), esi_employee: num(x.esi_employee),
     pt: num(x.pt), tds: num(x.tds), employer_pf: num(x.employer_pf), employer_esi: num(x.employer_esi),
     total_deductions: num(x.total_deductions), net: num(x.net),
   };
+}
+
+/** Days a worker was employed during the pay month (for hire-date proration):
+ *  full month if hired earlier, the tail of the month if hired during it, 0 if
+ *  hired after it. */
+function employedDaysInMonth(hiredOn: string, year: number, month: number, daysInMonth: number): number {
+  const [hy, hm, hd] = hiredOn.slice(0, 10).split("-").map(Number);
+  if (hy < year || (hy === year && hm < month)) return daysInMonth;
+  if (hy === year && hm === month) return Math.max(0, daysInMonth - hd + 1);
+  return 0;
 }
 
 /** All payroll runs with roll-up totals. HR/Owner only. */
@@ -58,6 +70,7 @@ export async function createRun(s: Session, period: string): Promise<string> {
   if (!/^\d{4}-\d{2}$/.test(period)) throw new Error("Pick a valid month.");
   const first = `${period}-01`;
   const dim = daysInPeriod(period);
+  const [py, pm] = period.split("-").map(Number);
 
   const active = (await listPeople(s)).filter((p) => p.employment_status === "Active" && p.salary);
   if (active.length === 0) throw new Error("No active employees with salary on file to pay.");
@@ -71,13 +84,18 @@ export async function createRun(s: Session, period: string): Promise<string> {
     const dupe = (await tx.execute(sql`select id from payroll_run where period = ${first}::date limit 1`)).rows as Array<{ id: string }>;
     if (dupe[0]) throw new Error(`Payroll for ${period} already exists — open it instead.`);
     const run = (await tx.execute(sql`insert into payroll_run (tenant_id, period, status, created_by) values (${s.tenantId}, ${first}::date, 'Draft', ${s.userId}) returning id`)).rows[0] as { id: string };
+    let paid = 0;
     for (const p of active) {
-      const c = computePay(Number(p.salary), unpaid.get(p.worker_id) ?? 0, dim);
+      const employedDays = employedDaysInMonth(String(p.hired_on), py, pm, dim);
+      if (employedDays <= 0) continue; // hired after this month — not on this payroll
+      const c = computePay(Number(p.salary), unpaid.get(p.worker_id) ?? 0, dim, employedDays);
       await tx.execute(sql`insert into payslip
-        (tenant_id, run_id, worker_id, basic, hra, conveyance, special, gross, lop_days, lop, pf_employee, esi_employee, pt, tds, employer_pf, employer_esi, total_deductions, net)
-        values (${s.tenantId}, ${run.id}, ${p.worker_id}, ${c.basic}, ${c.hra}, ${c.conveyance}, ${c.special}, ${c.gross}, ${c.lopDays}, ${c.lop}, ${c.pfEmployee}, ${c.esiEmployee}, ${c.pt}, ${c.tds}, ${c.employerPf}, ${c.employerEsi}, ${c.totalDeductions}, ${c.net})`);
+        (tenant_id, run_id, worker_id, basic, hra, conveyance, special, gross, paid_days, lop_days, lop, pf_employee, esi_employee, pt, tds, employer_pf, employer_esi, total_deductions, net)
+        values (${s.tenantId}, ${run.id}, ${p.worker_id}, ${c.basic}, ${c.hra}, ${c.conveyance}, ${c.special}, ${c.gross}, ${c.paidDays}, ${c.lopDays}, ${c.lop}, ${c.pfEmployee}, ${c.esiEmployee}, ${c.pt}, ${c.tds}, ${c.employerPf}, ${c.employerEsi}, ${c.totalDeductions}, ${c.net})`);
+      paid++;
     }
-    await tx.execute(sql`insert into audit_log (tenant_id, actor_id, action, entity, entity_id, after) values (${s.tenantId}, ${s.userId}, 'payroll_run', 'payroll_run', ${run.id}, ${JSON.stringify({ period, headcount: active.length })}::jsonb)`);
+    if (paid === 0) throw new Error("No employees were employed during this month.");
+    await tx.execute(sql`insert into audit_log (tenant_id, actor_id, action, entity, entity_id, after) values (${s.tenantId}, ${s.userId}, 'payroll_run', 'payroll_run', ${run.id}, ${JSON.stringify({ period, headcount: paid })}::jsonb)`);
     return run.id;
   });
 }

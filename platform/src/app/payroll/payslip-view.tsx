@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { rupee } from "@/lib/salary";
-import { periodLabel } from "@/lib/payroll";
+import { periodLabel, daysInPeriod } from "@/lib/payroll";
 import type { PayslipRow } from "@/repos/payroll";
 
 const Row = ({ label, value, strong = false, muted = false, bottom = false }: { label: string; value: string; strong?: boolean; muted?: boolean; bottom?: boolean }) => (
@@ -28,7 +28,12 @@ export function PayslipView({ slip, period, company }: { slip: PayslipRow; perio
             </div>
             <div className="modal-bd" style={{ maxHeight: "72vh", overflow: "auto" }}>
               <div style={{ fontWeight: 650, fontSize: 15, marginBottom: 2 }}>{slip.name}</div>
-              <div style={{ color: "var(--muted)", fontSize: 12.5, marginBottom: 16 }}>Net pay for {periodLabel(period)}</div>
+              <div style={{ color: "var(--muted)", fontSize: 12.5, marginBottom: 16 }}>
+                Net pay for {periodLabel(period)}
+                {slip.paid_days != null && slip.paid_days < daysInPeriod(period) && (
+                  <span style={{ color: "var(--coral, #ec6a49)" }}> · prorated for {slip.paid_days} of {daysInPeriod(period)} days</span>
+                )}
+              </div>
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 22, alignItems: "stretch" }}>
                 <div style={{ display: "flex", flexDirection: "column" }}>

@@ -177,6 +177,7 @@ export const payslip = pgTable("payslip", {
   conveyance: numeric("conveyance", { precision: 14, scale: 2 }).notNull().default("0"),
   special: numeric("special", { precision: 14, scale: 2 }).notNull().default("0"),
   gross: numeric("gross", { precision: 14, scale: 2 }).notNull().default("0"),
+  paidDays: numeric("paid_days", { precision: 5, scale: 1 }),
   lopDays: numeric("lop_days", { precision: 5, scale: 1 }).notNull().default("0"),
   lop: numeric("lop", { precision: 14, scale: 2 }).notNull().default("0"),
   pfEmployee: numeric("pf_employee", { precision: 14, scale: 2 }).notNull().default("0"),

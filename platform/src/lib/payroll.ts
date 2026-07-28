@@ -36,7 +36,8 @@ export function estimateAnnualTaxNewRegime(annualGross: number): number {
 
 export type PayComponents = {
   basic: number; hra: number; conveyance: number; special: number;
-  gross: number;                        // monthly employee earnings (excludes employer PF)
+  gross: number;                        // earned monthly earnings (prorated; excludes employer PF)
+  paidDays: number; monthDays: number;  // days paid / days in the month (hire-date proration)
   lopDays: number; lop: number;         // loss of pay
   pfEmployee: number; esiEmployee: number; pt: number; tds: number;
   employerPf: number; employerEsi: number;
@@ -45,31 +46,43 @@ export type PayComponents = {
 
 const round = (n: number) => Math.round(n);
 
-/** One month's payslip from annual CTC + unpaid (LOP) days in the period. */
-export function computePay(annualCTC: number, unpaidDays: number, daysInMonth: number): PayComponents {
+/** One month's payslip from annual CTC, unpaid (LOP) days, and the number of
+ *  days actually employed in the month (`employedDays` < month ⇒ hire-date
+ *  proration; defaults to the full month for backward compatibility). */
+export function computePay(annualCTC: number, unpaidDays: number, daysInMonth: number, employedDays: number = daysInMonth): PayComponents {
   const b = salaryBreakdown(annualCTC);
   const m = (prefix: string) => b.find((c) => c.label.startsWith(prefix))?.monthly ?? 0;
-  const basic = m("Basic");
-  const hra = m("House Rent");
-  const conveyance = m("Conveyance");
-  const special = m("Special");
+  const fullBasic = m("Basic");
+  const fullHra = m("House Rent");
+  const fullConv = m("Conveyance");
+  const fullSpecial = m("Special");
+  const fullGross = fullBasic + fullHra + fullConv + fullSpecial;
+
+  // Hire-date proration: pay only for the days employed in the month.
+  const paidDays = Math.max(0, Math.min(daysInMonth, employedDays));
+  const prorate = daysInMonth > 0 ? paidDays / daysInMonth : 0;
+  const basic = round(fullBasic * prorate);
+  const hra = round(fullHra * prorate);
+  const conveyance = round(fullConv * prorate);
+  const special = round(fullSpecial * prorate);
   const gross = basic + hra + conveyance + special;
 
-  const perDay = daysInMonth > 0 ? gross / daysInMonth : 0;
+  // Loss of pay: unpaid leave days at the full daily rate.
+  const perDay = daysInMonth > 0 ? fullGross / daysInMonth : 0;
   const lopDays = Math.max(0, unpaidDays);
   const lop = round(perDay * lopDays);
 
-  const pfEmployee = round(basic * 0.12);
-  const esiEmployee = gross <= ESI_WAGE_CEILING ? round(gross * 0.0075) : 0;
-  const pt = gross > 0 ? PT_MONTHLY : 0;
-  const tds = round(estimateAnnualTaxNewRegime(gross * 12) / 12);
+  const pfEmployee = round(basic * 0.12);                                          // 12% of earned basic
+  const esiEmployee = fullGross <= ESI_WAGE_CEILING ? round(gross * 0.0075) : 0;   // eligibility on full wage, amount on earned gross
+  const pt = gross > 0 ? PT_MONTHLY : 0;                                           // monthly professional tax (flat)
+  const tds = round((estimateAnnualTaxNewRegime(fullGross * 12) / 12) * prorate);  // annual estimate ÷ 12, prorated for a partial month
 
   const employerPf = round(basic * 0.12);
-  const employerEsi = gross <= ESI_WAGE_CEILING ? round(gross * 0.0325) : 0;
+  const employerEsi = fullGross <= ESI_WAGE_CEILING ? round(gross * 0.0325) : 0;
 
   const totalDeductions = lop + pfEmployee + esiEmployee + pt + tds;
   const net = Math.max(0, gross - totalDeductions);
-  return { basic, hra, conveyance, special, gross, lopDays, lop, pfEmployee, esiEmployee, pt, tds, employerPf, employerEsi, totalDeductions, net };
+  return { basic, hra, conveyance, special, gross, paidDays, monthDays: daysInMonth, lopDays, lop, pfEmployee, esiEmployee, pt, tds, employerPf, employerEsi, totalDeductions, net };
 }
 
 /** Days in the pay month for a "YYYY-MM" period string. */
