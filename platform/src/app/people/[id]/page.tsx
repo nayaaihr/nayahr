@@ -9,6 +9,7 @@ import { rupee } from "@/lib/salary";
 import { periodLabel } from "@/lib/payroll";
 import { PayslipView } from "@/app/payroll/payslip-view";
 import { EditJob } from "./edit-job";
+import { PayrollDetails } from "./payroll-details";
 
 export const dynamic = "force-dynamic";
 
@@ -76,6 +77,12 @@ export default async function WorkerPage({ params }: { params: { id: string } })
           <div className="stat"><div className="lbl">Hired</div><div className="val" style={{ fontSize: 15, marginTop: 14 }}>{fmt(p.hired_on)}</div><div className="sub2">{tenure(p.hired_on)} tenure</div></div>
           <div className="stat"><div className="lbl">Salary</div><div className="val">{inr(p.salary)}</div></div>
         </div>
+        {d.directEdit && (
+          <>
+            <div className="panel-hd" style={{ borderTop: "1px solid var(--line-2)" }}>Bank &amp; statutory (payroll)</div>
+            <PayrollDetails workerId={p.worker_id} current={d.payroll} />
+          </>
+        )}
         <div className="panel-hd" style={{ borderTop: "1px solid var(--line-2)" }}>Job history (effective-dated)</div>
         <table>
           <thead><tr><th>Effective</th><th>Event</th><th>Title</th><th>Department</th><th>Location</th><th>Manager</th><th>Status</th></tr></thead>

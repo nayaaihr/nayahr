@@ -56,9 +56,8 @@ Neon paid + verified PITR; prod DB in **Mumbai** region; error tracking + uptime
 
 ## 🟡 Next — before scaling past the first client
 
-### NH-105 · Payroll bank export + statutory summary — P1 · M
-NEFT/CSV of net pay for the bank; PF/ESI/PT/TDS totals sheet for filing.
-**Done when:** a finalized run exports a bank file + a statutory summary matching the run totals.
+### NH-105 · Payroll bank export + statutory summary — P1 · M · ✅ Done (Jul 2026)
+Added bank/statutory identifiers (bank a/c, IFSC, PAN, UAN) on each employee (HR-editable under **Bank & statutory** on the profile), and two CSV exports on a payroll run: a **Bank file** (Beneficiary / Account / IFSC / Amount / NEFT / Remarks — flags anyone missing bank details) and a **Statutory summary** (PF/ESI/PT/TDS per employee + a totals row). Migration `0019_worker_payroll_details.sql`.
 
 ### NH-106 · Payroll correction / un-finalize — P2 · M
 Finalize is one-way today.

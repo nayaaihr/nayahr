@@ -119,6 +119,63 @@ export async function getRun(s: Session, runId: string): Promise<RunDetail | nul
   });
 }
 
+// ── NH-105: exports for a run ────────────────────────────────────────────────
+
+export type BankLine = { name: string; bankAccount: string | null; bankIfsc: string | null; net: number };
+export type BankExport = { period: string; status: string; rows: BankLine[]; total: number; missing: number };
+
+/** Net-pay disbursement list for a bank NEFT upload. HR/Owner only. */
+export async function getBankExport(s: Session, runId: string): Promise<BankExport | null> {
+  if (!isHR(s)) return null;
+  return withSession(s, async (tx) => {
+    const rr = (await tx.execute(sql`select to_char(period,'YYYY-MM') as period, status from payroll_run where id = ${runId} limit 1`)).rows as Array<Record<string, unknown>>;
+    if (!rr[0]) return null;
+    const rows = (await tx.execute(sql`
+      select w.full_name as name, w.bank_account, w.bank_ifsc, p.net
+      from payslip p join worker w on w.id = p.worker_id
+      where p.run_id = ${runId} order by w.full_name`)).rows as Array<Record<string, unknown>>;
+    const lines: BankLine[] = rows.map((x) => ({
+      name: x.name as string, bankAccount: (x.bank_account as string) ?? null,
+      bankIfsc: (x.bank_ifsc as string) ?? null, net: num(x.net),
+    }));
+    return {
+      period: rr[0].period as string, status: rr[0].status as string, rows: lines,
+      total: lines.reduce((a, l) => a + l.net, 0),
+      missing: lines.filter((l) => !l.bankAccount || !l.bankIfsc).length,
+    };
+  });
+}
+
+export type StatutoryLine = { name: string; pan: string | null; uan: string | null; gross: number; pfEmployee: number; employerPf: number; esiEmployee: number; employerEsi: number; pt: number; tds: number };
+export type StatutoryTotals = { gross: number; pfEmployee: number; employerPf: number; esiEmployee: number; employerEsi: number; pt: number; tds: number };
+export type StatutorySummary = { period: string; status: string; rows: StatutoryLine[]; totals: StatutoryTotals };
+
+/** PF / ESI / PT / TDS breakdown + totals for statutory filing. HR/Owner only. */
+export async function getStatutorySummary(s: Session, runId: string): Promise<StatutorySummary | null> {
+  if (!isHR(s)) return null;
+  return withSession(s, async (tx) => {
+    const rr = (await tx.execute(sql`select to_char(period,'YYYY-MM') as period, status from payroll_run where id = ${runId} limit 1`)).rows as Array<Record<string, unknown>>;
+    if (!rr[0]) return null;
+    const rows = (await tx.execute(sql`
+      select w.full_name as name, w.pan, w.uan, p.gross, p.pf_employee, p.employer_pf, p.esi_employee, p.employer_esi, p.pt, p.tds
+      from payslip p join worker w on w.id = p.worker_id
+      where p.run_id = ${runId} order by w.full_name`)).rows as Array<Record<string, unknown>>;
+    const lines: StatutoryLine[] = rows.map((x) => ({
+      name: x.name as string, pan: (x.pan as string) ?? null, uan: (x.uan as string) ?? null,
+      gross: num(x.gross), pfEmployee: num(x.pf_employee), employerPf: num(x.employer_pf),
+      esiEmployee: num(x.esi_employee), employerEsi: num(x.employer_esi), pt: num(x.pt), tds: num(x.tds),
+    }));
+    const sum = (f: (l: StatutoryLine) => number) => lines.reduce((a, l) => a + f(l), 0);
+    return {
+      period: rr[0].period as string, status: rr[0].status as string, rows: lines,
+      totals: {
+        gross: sum((l) => l.gross), pfEmployee: sum((l) => l.pfEmployee), employerPf: sum((l) => l.employerPf),
+        esiEmployee: sum((l) => l.esiEmployee), employerEsi: sum((l) => l.employerEsi), pt: sum((l) => l.pt), tds: sum((l) => l.tds),
+      },
+    };
+  });
+}
+
 export async function finalizeRun(s: Session, runId: string): Promise<void> {
   if (!isHR(s)) throw new Error("Only HR can finalize payroll.");
   await withSession(s, async (tx) => {

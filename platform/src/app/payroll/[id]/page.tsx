@@ -6,6 +6,7 @@ import { getCompany } from "@/repos/company";
 import { rupee } from "@/lib/salary";
 import { periodLabel } from "@/lib/payroll";
 import { RunActions } from "../run-actions";
+import { RunExports } from "../run-exports";
 import { PayslipView } from "../payslip-view";
 import { HeaderHint } from "../header-hint";
 
@@ -42,7 +43,10 @@ export default async function RunPage({ params }: { params: { id: string } }) {
           <h1 style={{ display: "flex", alignItems: "center", gap: 12 }}>Payroll · {periodLabel(run.period)} {statusPill(run.status)}</h1>
           <div className="sub">{run.slips.length} employees{run.status === "Finalized" && run.finalized_at ? ` · finalized ${new Date(run.finalized_at).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}` : " · draft"}</div>
         </div>
-        <RunActions runId={run.id} status={run.status} />
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          {run.slips.length > 0 && <RunExports runId={run.id} />}
+          <RunActions runId={run.id} status={run.status} />
+        </div>
       </div>
 
       <div className="statrow" style={{ gridTemplateColumns: "repeat(4, 1fr)" }}>

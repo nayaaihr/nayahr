@@ -10,6 +10,7 @@ export type JobEvent = {
   department: string | null; location: string | null; manager: string | null;
 };
 export type PendingChange = { id: string; effective_date: string; title: string; new_status: string };
+export type PayrollDetails = { bankAccount: string | null; bankIfsc: string | null; pan: string | null; uan: string | null };
 export type WorkerDetail = {
   person: PersonRow;
   jobHistory: JobEvent[];
@@ -18,6 +19,7 @@ export type WorkerDetail = {
   balances: LeaveBalance[];
   review: Review | null;
   goals: PerfGoal[];
+  payroll: PayrollDetails; // bank + statutory identifiers (HR-editable)
   canEdit: boolean;     // can open the edit form (HR any; manager their team, not self)
   directEdit: boolean;  // HR/Owner — applies immediately; managers submit for approval
   pending: PendingChange | null;
@@ -53,8 +55,8 @@ export async function getWorkerDetail(s: Session, workerId: string): Promise<Wor
   const person = people.find((p) => p.worker_id === workerId);
   if (!person) return null;
 
-  const [comp, leaveAll, perf, jobHistory, pending] = await Promise.all([
-    listCompHistory(s), listLeave(s), listPerformance(s), getJobHistory(s, workerId), getPendingChange(s, workerId),
+  const [comp, leaveAll, perf, jobHistory, pending, payroll] = await Promise.all([
+    listCompHistory(s), listLeave(s), listPerformance(s), getJobHistory(s, workerId), getPendingChange(s, workerId), getPayrollDetails(s, workerId),
   ]);
   const leave = leaveAll.filter((l) => l.worker_id === workerId);
   const isHR = s.role === "owner" || s.role === "hr_admin";
@@ -66,10 +68,48 @@ export async function getWorkerDetail(s: Session, workerId: string): Promise<Wor
     balances: balancesFor(leave, workerId),
     review: perf.rows.find((r) => r.worker_id === workerId) ?? null,
     goals: perf.goals.filter((g) => g.worker_id === workerId),
+    payroll,
     canEdit: isHR || (s.role === "manager" && workerId !== s.workerId),
     directEdit: isHR,
     pending,
   };
+}
+
+async function getPayrollDetails(s: Session, workerId: string): Promise<PayrollDetails> {
+  const empty: PayrollDetails = { bankAccount: null, bankIfsc: null, pan: null, uan: null };
+  try {
+    return await withSession(s, async (tx) => {
+      const r = (await tx.execute(sql`select bank_account, bank_ifsc, pan, uan from worker where id = ${workerId} limit 1`)).rows as Array<Record<string, unknown>>;
+      const x = r[0] ?? {};
+      return {
+        bankAccount: (x.bank_account as string) ?? null, bankIfsc: (x.bank_ifsc as string) ?? null,
+        pan: (x.pan as string) ?? null, uan: (x.uan as string) ?? null,
+      };
+    });
+  } catch {
+    // Columns not migrated yet — the profile page must still render.
+    return empty;
+  }
+}
+
+/** Update a worker's bank + statutory identifiers. HR/Owner only. Light-validates
+ *  the formats and audits which fields were set (never logs the raw values). */
+export async function updatePayrollDetails(s: Session, workerId: string, f: PayrollDetails): Promise<void> {
+  if (!(s.role === "owner" || s.role === "hr_admin")) throw new Error("Only HR can edit payroll details.");
+  const norm = (v: string | null) => { const t = (v ?? "").trim(); return t === "" ? null : t; };
+  const bankAccount = norm(f.bankAccount);
+  const bankIfsc = norm(f.bankIfsc)?.toUpperCase() ?? null;
+  const pan = norm(f.pan)?.toUpperCase() ?? null;
+  const uan = norm(f.uan);
+  if (bankAccount && !/^\d{6,20}$/.test(bankAccount)) throw new Error("Account number should be 6–20 digits.");
+  if (bankIfsc && !/^[A-Z]{4}0[A-Z0-9]{6}$/.test(bankIfsc)) throw new Error("IFSC looks invalid (e.g. HDFC0001234).");
+  if (pan && !/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(pan)) throw new Error("PAN looks invalid (e.g. ABCDE1234F).");
+  if (uan && !/^\d{12}$/.test(uan)) throw new Error("UAN should be 12 digits.");
+  await withSession(s, async (tx) => {
+    await tx.execute(sql`update worker set bank_account = ${bankAccount}, bank_ifsc = ${bankIfsc}, pan = ${pan}, uan = ${uan} where id = ${workerId} and tenant_id = ${s.tenantId}`);
+    await tx.execute(sql`insert into audit_log (tenant_id, actor_id, action, entity, entity_id, after) values (${s.tenantId}, ${s.userId}, 'payroll_details', 'worker', ${workerId},
+      ${JSON.stringify({ bankAccount: bankAccount ? "set" : null, bankIfsc: bankIfsc ? "set" : null, pan: pan ? "set" : null, uan: uan ? "set" : null })}::jsonb)`);
+  });
 }
 
 async function getPendingChange(s: Session, workerId: string): Promise<PendingChange | null> {

@@ -15,7 +15,7 @@ _Last updated: July 2026._
 
 ### Commercial / ops
 - [ ] **[Biz] Vercel Pro ($20/mo).** Hobby is non-commercial — required the moment money changes hands.
-- [x] **[Biz] Real `hello@nayahr.in` inbox.** ✅ Purchased via GoDaddy (₹1,044 / 3 yrs). _Finish setup: activate mailbox, enable DKIM + add DMARC, and send a mail-tester.com check before emailing prospects._
+- [x] **[Biz] Real `hello@nayahr.in` inbox.** ✅ Purchased & set up via GoDaddy (₹1,044 / 3 yrs) — mailbox live.
 
 ### Engineering
 - [x] **[Eng] Fix roster hire-date import.** ✅ Now parses `DD/MM/YY` (+ ISO, dot/dash separators, 2-digit-year pivot). _(NH-101, shipped Jul 2026.)_
@@ -26,7 +26,7 @@ _Last updated: July 2026._
 
 ## 🟡 Strongly recommended — before the 2nd/3rd client
 
-- [ ] **[Eng] Payroll bank export + statutory summary.** Payroll currently *computes* but stops there. Add a NEFT/CSV of net pay for the bank + a PF/ESI/PT/TDS totals sheet for filing. _(Biggest functional gap for a payroll product.)_
+- [x] **[Eng] Payroll bank export + statutory summary.** ✅ A payroll run now exports a **Bank file** (NEFT CSV of net pay) and a **Statutory summary** (PF/ESI/PT/TDS per employee + totals). Bank a/c, IFSC, PAN, UAN captured per employee on their profile. _(NH-105.)_
 - [ ] **[Eng] Payroll correction / un-finalize path.** Finalize is one-way today; mistakes need a real fix (reversal or next-run adjustment).
 - [ ] **[Biz/Eng] Error tracking + uptime monitoring** (e.g. Sentry + a status ping) — know it broke before the client does.
 - [ ] **[Eng] CSV import: quoted-field support + a preview/validate step** — smoother, safer onboarding.
