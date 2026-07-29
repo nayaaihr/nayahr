@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { sql } from "drizzle-orm";
 import { db, type Session, type Role } from "@/db/client";
+import { isSuperAdminEmail } from "@/lib/superadmin";
 
 /**
  * Identity comes from Clerk. We resolve the user's tenant + role by looking up
@@ -154,7 +155,8 @@ export async function getSession(): Promise<Session> {
     }
   }
 
-  return { tenantId, userId: appUser.id, role, realRole, workerId };
+  // Reuse the Clerk email already fetched above — no extra network round-trip.
+  return { tenantId, userId: appUser.id, role, realRole, workerId, isSuperAdmin: isSuperAdminEmail(email) };
 }
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;

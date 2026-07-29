@@ -7,7 +7,6 @@ import { ProfileChip } from "./profile-chip";
 import { CompanyBrand } from "./company-brand";
 import { CompanySetupBanner } from "./company-setup-banner";
 import { getSession, NoWorkspaceError } from "@/lib/session";
-import { isSuperAdmin } from "@/lib/superadmin";
 import { NoWorkspace } from "./no-workspace";
 import { inboxCount } from "@/repos/inbox";
 import { getCompany } from "@/repos/company";
@@ -39,22 +38,28 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   let managers: PersonaOpt[] = [];
   let employees: PersonaOpt[] = [];
   let noWorkspace = false;
+  let superAdmin = false;
   try {
     const session = await getSession();
     role = session.role;
     currentWorkerId = session.workerId;
+    superAdmin = session.isSuperAdmin; // already resolved in getSession — no extra Clerk call
     // Owner can preview lower roles in any env; everyone can in dev.
     canViewAs = session.realRole === "owner" || process.env.NODE_ENV !== "production";
-    const [p, c] = await Promise.all([inboxCount(session), getCompany(session)]);
+    // Fetch inbox count, company, and (if allowed) persona options in parallel.
+    const [p, c, personas] = await Promise.all([
+      inboxCount(session),
+      getCompany(session),
+      canViewAs ? listPersonaOptions(session) : Promise.resolve(null),
+    ]);
     pending = p; company = c;
-    if (canViewAs) { const o = await listPersonaOptions(session); managers = o.managers; employees = o.employees; }
+    if (personas) { managers = personas.managers; employees = personas.employees; }
   } catch (e) {
     // Signed in but not invited to any workspace → show the request-invite screen.
     if (e instanceof NoWorkspaceError) noWorkspace = true;
     /* otherwise: not signed in — auth pages render without the app shell */
   }
   const canEditLogo = role === "owner" || role === "hr_admin";
-  const superAdmin = await isSuperAdmin(); // provider staff — cross-tenant console link
 
   return (
     <ClerkProvider appearance={clerkAppearance}>

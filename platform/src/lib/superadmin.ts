@@ -1,17 +1,27 @@
 import { currentUser } from "@clerk/nextjs/server";
 
-/** True if the signed-in user is a NayaHR platform super-admin (provider staff),
- *  determined by the SUPERADMIN_EMAILS allowlist (comma-separated). This is
- *  orthogonal to tenant roles — a super-admin manages the platform, not a tenant.
- *  Empty/unset allowlist ⇒ nobody is a super-admin (feature is off). */
-export async function isSuperAdmin(): Promise<boolean> {
-  const allow = (process.env.SUPERADMIN_EMAILS ?? "")
+/** The configured super-admin allowlist (lowercased). Empty ⇒ feature off. */
+export function superAdminEmails(): string[] {
+  return (process.env.SUPERADMIN_EMAILS ?? "")
     .split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
-  if (allow.length === 0) return false;
+}
+
+/** Pure check — is this email a platform super-admin? (No network call.) */
+export function isSuperAdminEmail(email: string | null | undefined): boolean {
+  if (!email) return false;
+  return superAdminEmails().includes(email.toLowerCase());
+}
+
+/** Standalone check that does its own Clerk lookup — used at the `/admin`
+ *  boundary (page + repo) for defense in depth. On the hot path, prefer the
+ *  `session.isSuperAdmin` flag (computed once in getSession) to avoid a second
+ *  Clerk round-trip. */
+export async function isSuperAdmin(): Promise<boolean> {
+  if (superAdminEmails().length === 0) return false;
   try {
     const u = await currentUser();
     if (!u) return false;
-    return u.emailAddresses.some((e) => allow.includes(e.emailAddress.toLowerCase()));
+    return u.emailAddresses.some((e) => isSuperAdminEmail(e.emailAddress));
   } catch {
     return false;
   }

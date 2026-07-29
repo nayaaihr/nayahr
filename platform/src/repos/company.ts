@@ -7,20 +7,18 @@ export type Company = { name: string; logoUrl: string | null; nameConfirmed: boo
  *  `nameConfirmed` drives the first-login "set your company name" prompt; it's
  *  read separately so a missing column (pre-migration) degrades gracefully. */
 export async function getCompany(s: Session): Promise<Company> {
-  const base = await withSession(s, async (tx) => {
-    const r = (await tx.execute(sql`select name, logo_url from tenant where id = ${s.tenantId} limit 1`)).rows as Array<{ name: string; logo_url: string | null }>;
-    return { name: r[0]?.name ?? "Company", logoUrl: r[0]?.logo_url ?? null };
-  });
-  let nameConfirmed = true;
   try {
-    nameConfirmed = await withSession(s, async (tx) => {
-      const r = (await tx.execute(sql`select name_confirmed from tenant where id = ${s.tenantId} limit 1`)).rows as Array<{ name_confirmed: boolean }>;
-      return r[0]?.name_confirmed ?? true;
+    return await withSession(s, async (tx) => {
+      const r = (await tx.execute(sql`select name, logo_url, name_confirmed from tenant where id = ${s.tenantId} limit 1`)).rows as Array<{ name: string; logo_url: string | null; name_confirmed: boolean }>;
+      return { name: r[0]?.name ?? "Company", logoUrl: r[0]?.logo_url ?? null, nameConfirmed: r[0]?.name_confirmed ?? true };
     });
   } catch {
-    nameConfirmed = true; // column not migrated yet — don't nag
+    // Pre-migration fallback (name_confirmed column absent) — one query, no nag.
+    return await withSession(s, async (tx) => {
+      const r = (await tx.execute(sql`select name, logo_url from tenant where id = ${s.tenantId} limit 1`)).rows as Array<{ name: string; logo_url: string | null }>;
+      return { name: r[0]?.name ?? "Company", logoUrl: r[0]?.logo_url ?? null, nameConfirmed: true };
+    });
   }
-  return { ...base, nameConfirmed };
 }
 
 /** Rename the company (tenant) — HR/Owner only. Used on branding + payslips. */

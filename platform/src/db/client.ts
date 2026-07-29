@@ -34,6 +34,7 @@ export type Session = {
   role: Role;            // effective role (may be a "view as" override)
   realRole: Role;        // the user's true role (Owner can preview lower roles)
   workerId: string | null; // the worker this user IS (for self/team scoping)
+  isSuperAdmin: boolean; // platform super-admin (provider staff) — orthogonal to tenant role
 };
 
 /**
