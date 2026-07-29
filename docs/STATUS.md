@@ -25,9 +25,9 @@ _Last updated: 2026-07-29._
 - **Vercel Pro**.
 
 ## ⚙️ DB migration state (as of 2026-07-29)
-- **Prod** (`ep-raspy-waterfall`, Singapore): fully migrated **through 0022** + `schema_migrations` ledger initialized (all 23 recorded). ✅
-- **Dev** (`ep-noisy-cake`, Sydney): behind — needs `0019`–`0022` applied, then `npm run db:apply -- --baseline`. Verify with `npm run schema:check`.
-- Drift check anytime (run per DB): `npm run schema:check` (what exists) / `npm run db:status` (ledger applied vs pending).
+- **Prod** (`ep-raspy-waterfall`, Singapore) and **Dev** (`ep-noisy-cake`, Sydney): both fully migrated **through 0022** + `schema_migrations` ledger (all 23 recorded). **In sync.** ✅
+- Drift check anytime (run per DB): `npm run schema:check` (what exists) / `npm run db:status` (ledger applied vs pending). Both print a `target DB:` host line so you can see which DB you're hitting.
+- ⚠️ Which DB a command hits = which `DATABASE_URL` is in scope: no prefix → `.env` (Dev); a shell `export DATABASE_URL=…` or inline prefix → that DB (Prod). A **fresh terminal** clears a stray export. Always read the `target DB:` line before writes.
 - Set `SUPERADMIN_EMAILS` in Vercel (platform) + redeploy → enables `/admin` _(confirm done)_.
 
 ## How to resume
