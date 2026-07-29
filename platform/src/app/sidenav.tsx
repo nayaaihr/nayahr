@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const PEOPLE = (
@@ -76,17 +77,17 @@ export function SideNav({ role, inboxCount = 0, superAdmin = false }: { role: st
   return (
     <nav className="nav">
       {items.map((i) => (
-        <a key={i.href} href={i.href} className={path.startsWith(i.href) ? "active" : ""}>
+        <Link key={i.href} href={i.href} className={path.startsWith(i.href) ? "active" : ""}>
           <span className="ico">{i.icon}</span>
           {i.label}
           {i.href === "/inbox" && inboxCount > 0 && <span className="nav-count">{inboxCount}</span>}
-        </a>
+        </Link>
       ))}
       {superAdmin && (
-        <a href="/admin" className={path === "/admin" ? "active" : ""} title="Platform super-admin">
+        <Link href="/admin" className={path === "/admin" ? "active" : ""} title="Platform super-admin">
           <span className="ico">{CLIENTS}</span>
           Clients
-        </a>
+        </Link>
       )}
     </nav>
   );
