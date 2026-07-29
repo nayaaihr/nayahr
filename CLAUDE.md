@@ -14,6 +14,16 @@ Multi-tenant SaaS. Modules shipped & live: **Core HR** (effective-dated), **Recr
 - Root docs: `BACKLOG.md` (NH-### items), `LAUNCH-CHECKLIST.md`, onboarding/pricing/architecture decks.
 - **Two Vercel projects, one GitHub repo** (`github.com/nayaaihr/nayahr`, private, branch `main`). An **Ignored Build Step** (`git diff --quiet HEAD^ HEAD ./`) means root-level `.md`/`.pdf` commits don't trigger app/marketing deploys — only changes under the project's own dir do.
 
+## Environments (prod vs dev)
+| | URL | Neon DB | Clerk pool |
+|---|---|---|---|
+| **Production** | `https://app.nayahr.in` (Vercel) | Prod — `ep-raspy-waterfall` (Singapore) | `pk_live` (real users) |
+| **Development** | `http://localhost:3000` (**local only**, `npm run dev` in `platform/`) | Dev — `ep-noisy-cake` (Sydney) | `pk_test` (separate dev users) |
+
+- The Dev DB has **no hosted URL** — it's reached only by the local dev server. Vercel's env vars point the deployed app at Prod; the local `.env` points at Dev. A hosted **staging** URL doesn't exist yet (follow-up in `docs/STATUS.md`).
+- **Test locally:** `npm run dev` → `http://localhost:3000` (Dev DB + Dev Clerk). Sign-in is a separate pool from prod. Use the **dev role switcher** (sidebar, non-prod only) to preview Owner/HR/Manager/Employee. `npm run seed` loads demo data; `npm run db:reset` wipes + reseeds (dev-only, destructive).
+- **Which DB a CLI command hits** = which `DATABASE_URL` is in scope: no prefix → `.env` (Dev); a shell `export`/inline `DATABASE_URL='…prod…'` → Prod. `db:apply`/`db:status`/`schema:check` print a `target DB:` host line — read it before writes. A fresh terminal clears a stray export.
+
 ## Architecture essentials
 - **Multi-tenancy = Postgres Row-Level Security (FORCE RLS).** The app connects as role **`nayahr_app`** which **cannot bypass RLS** (`APP_DATABASE_URL`). The **owner** role (`DATABASE_URL`) is for migrations/operator scripts only. `withSession(session, fn)` in `src/db/client.ts` sets `app.tenant`/`app.user`/`app.role` GUCs per transaction; every repo query runs through it and is auto-scoped. **Never** add a code path that bypasses RLS for tenant data. (Cross-tenant super-admin reads go through a `SECURITY DEFINER` function, `admin_tenant_summary()`, gated by `SUPERADMIN_EMAILS`.)
 - **Effective-dated data:** append-only `job_event` / `compensation_event` (effective_date + seq); never mutate history.
