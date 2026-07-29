@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getSession } from "@/lib/session";
 import { getWorkerDetail } from "@/repos/worker-detail";
-import { listPeople, listRefData } from "@/repos/people";
+import { listRefData } from "@/repos/people";
 import { SalaryStructure, CompHistory } from "@/app/comp/comp-detail";
 import { getWorkerPayslips } from "@/repos/payroll";
 import { getCompany } from "@/repos/company";
@@ -36,9 +36,12 @@ export default async function WorkerPage({ params }: { params: { id: string } })
   const p = d.person;
   // For an employee this page IS their "People" view — no list to go back to.
   const selfView = session.role === "employee";
-  const ref = d.canEdit ? await listRefData(session) : { departments: [], locations: [] };
-  const people = d.canEdit ? (await listPeople(session)).map((x) => ({ id: x.worker_id, name: x.full_name })) : [];
-  const payslips = await getWorkerPayslips(session, params.id);
+  // Fetch ref data + payslips in parallel; reuse the people list from getWorkerDetail.
+  const [ref, payslips] = await Promise.all([
+    d.canEdit ? listRefData(session) : Promise.resolve({ departments: [], locations: [] }),
+    getWorkerPayslips(session, params.id),
+  ]);
+  const people = d.people;
   const company = payslips.length ? await getCompany(session) : { name: "" };
 
   return (

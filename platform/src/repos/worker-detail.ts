@@ -20,6 +20,7 @@ export type WorkerDetail = {
   review: Review | null;
   goals: PerfGoal[];
   payroll: PayrollDetails; // bank + statutory identifiers (HR-editable)
+  people: { id: string; name: string }[]; // manager-dropdown options (only when canEdit)
   canEdit: boolean;     // can open the edit form (HR any; manager their team, not self)
   directEdit: boolean;  // HR/Owner — applies immediately; managers submit for approval
   pending: PendingChange | null;
@@ -60,6 +61,7 @@ export async function getWorkerDetail(s: Session, workerId: string): Promise<Wor
   ]);
   const leave = leaveAll.filter((l) => l.worker_id === workerId);
   const isHR = s.role === "owner" || s.role === "hr_admin";
+  const canEdit = isHR || (s.role === "manager" && workerId !== s.workerId);
   return {
     person,
     jobHistory,
@@ -69,7 +71,9 @@ export async function getWorkerDetail(s: Session, workerId: string): Promise<Wor
     review: perf.rows.find((r) => r.worker_id === workerId) ?? null,
     goals: perf.goals.filter((g) => g.worker_id === workerId),
     payroll,
-    canEdit: isHR || (s.role === "manager" && workerId !== s.workerId),
+    // Reuse the people list already fetched above (avoids a second listPeople on the page).
+    people: canEdit ? people.map((p) => ({ id: p.worker_id, name: p.full_name })) : [],
+    canEdit,
     directEdit: isHR,
     pending,
   };

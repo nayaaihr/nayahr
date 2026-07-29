@@ -45,9 +45,11 @@ export type Session = {
  */
 export async function withSession<T>(s: Session, fn: (tx: typeof db) => Promise<T>): Promise<T> {
   return db.transaction(async (tx) => {
-    await tx.execute(sql`select set_config('app.tenant', ${s.tenantId}, true)`);
-    await tx.execute(sql`select set_config('app.user', ${s.userId ?? ""}, true)`);
-    await tx.execute(sql`select set_config('app.role', ${s.role}, true)`);
+    // Set all three RLS GUCs in a single round-trip (transaction-local).
+    await tx.execute(sql`select
+      set_config('app.tenant', ${s.tenantId}, true),
+      set_config('app.user', ${s.userId ?? ""}, true),
+      set_config('app.role', ${s.role}, true)`);
     return fn(tx as unknown as typeof db);
   });
 }
