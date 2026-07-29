@@ -20,6 +20,10 @@ config({ path: ".env.local", override: true });
 
 const SQL_DIR = "sql";
 
+function redactHost(url: string): string {
+  try { const u = new URL(url); return `${u.host}${u.pathname}`; } catch { return "(database)"; }
+}
+
 async function ensureLedger(pool: Pool) {
   await pool.query(`create table if not exists schema_migrations (
     version text primary key,
@@ -40,6 +44,7 @@ async function main() {
   if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is not set (owner role).");
 
   const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+  console.log(`  target DB: ${redactHost(process.env.DATABASE_URL)}`);
   await ensureLedger(pool);
 
   if (arg === "--status") {
