@@ -24,9 +24,11 @@ _Last updated: 2026-07-29._
 - Neon **paid + Mumbai region + verified backup restore**.
 - **Vercel Pro**.
 
-## ⚙️ Prod actions the user must run (if not done)
-- Migrations on prod (owner `DATABASE_URL`): `0019`, `0020`, `0021`, `0022` — via `npm run db:apply -- sql/00XX.sql`. _(User indicated 0019/0020 done; confirm 0021/0022.)_
-- Set `SUPERADMIN_EMAILS` in Vercel (platform) + redeploy → enables `/admin`.
+## ⚙️ DB migration state (as of 2026-07-29)
+- **Prod** (`ep-raspy-waterfall`, Singapore): fully migrated **through 0022** + `schema_migrations` ledger initialized (all 23 recorded). ✅
+- **Dev** (`ep-noisy-cake`, Sydney): behind — needs `0019`–`0022` applied, then `npm run db:apply -- --baseline`. Verify with `npm run schema:check`.
+- Drift check anytime (run per DB): `npm run schema:check` (what exists) / `npm run db:status` (ledger applied vs pending).
+- Set `SUPERADMIN_EMAILS` in Vercel (platform) + redeploy → enables `/admin` _(confirm done)_.
 
 ## How to resume
 New chat in this repo → CLAUDE.md auto-loads. Say what you want (e.g. "build the PWA — Phase 1 from docs/PWA-PLAN.md"). Ask me to update this file at the end of a session.
