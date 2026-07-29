@@ -21,7 +21,7 @@ _Last updated: 2026-07-29._
 
 ## ⛔ Blocked on the user (business/infra, not code)
 - ToS + Privacy Policy **lawyer review** (fill `[Registered address]`, `[CIN]`, effective date first).
-- Neon **paid + Mumbai region + verified backup restore**.
+- Neon **paid (Launch plan) + Mumbai region + verified backup restore**. Region move = new Mumbai project + migrate (runbook: `docs/NEON-MUMBAI-MIGRATION.md`).
 - **Vercel Pro**.
 
 ## ⚙️ DB migration state (as of 2026-07-29)
