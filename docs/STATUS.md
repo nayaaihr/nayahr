@@ -17,6 +17,7 @@ _Last updated: 2026-07-29._
 ## 🐢 Follow-ups / known optimizations
 - **Profile page (`/people/[id]`) worker-scoped queries.** It still fetches whole-tenant leave/comp/performance then filters to one worker — fine for small tenants, wasteful at scale. Rewrite `getWorkerDetail` (+ repo variants) to fetch only the target worker's data. Do once clients get larger. _(Biggest remaining single-page latency after Neon Mumbai.)_
 - **Neon → Mumbai migration is the biggest latency lever** (see Blocked). Functions are already in Mumbai; co-locating the DB turns ~40ms round-trips into ~2ms and speeds every page (profile page most).
+- **Staging environment.** Today `main` deploys **straight to production** (no pre-prod gate). Add a `staging.nayahr.in` Vercel deploy on a `staging` branch pointed at a **separate Neon branch/DB**, so changes bake before hitting real clients. Worth it once there are paying clients who'd be affected by a bad deploy. Would need: a staging branch + Vercel env (staging `APP_DATABASE_URL`/`DATABASE_URL`, Clerk keys, `APP_URL`) + a promote-to-prod flow.
 
 ## ⛔ Blocked on the user (business/infra, not code)
 - ToS + Privacy Policy **lawyer review** (fill `[Registered address]`, `[CIN]`, effective date first).
