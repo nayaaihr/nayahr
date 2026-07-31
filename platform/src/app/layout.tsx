@@ -17,6 +17,9 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "NayaHR — Platform",
   description: "AI-native HRIS",
+  // The app is behind auth — keep it out of search by default. Public job pages
+  // (/jobs/[id]) override this with robots: { index: true } for Google Jobs.
+  robots: { index: false, follow: false },
   icons: {
     icon: [
       {
