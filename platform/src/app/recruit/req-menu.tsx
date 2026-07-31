@@ -16,10 +16,16 @@ export function ReqActionsMenu({ reqId, title, status }: { reqId: string; title:
     if (r.ok) router.refresh(); else alert(r.error);
   });
 
+  const publicUrl = () => `${window.location.origin}/jobs/${reqId}`;
   const shareLinkedIn = () => {
-    const url = `${window.location.origin}/jobs/${reqId}`;
-    window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`, "_blank", "noopener,noreferrer,width=620,height=680");
+    window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(publicUrl())}`, "_blank", "noopener,noreferrer,width=620,height=680");
   };
+  const copyLink = async () => {
+    const url = publicUrl();
+    try { await navigator.clipboard.writeText(url); alert(`Public job link copied:\n${url}`); }
+    catch { prompt("Public job link — copy it:", url); }
+  };
+  const openLink = () => window.open(publicUrl(), "_blank", "noopener,noreferrer");
   const del = () => {
     if (!confirm(`Delete the "${title}" requisition and its candidate list?\n\nThis can't be undone. Anyone already hired stays an employee.`)) return;
     run(() => deleteReqAction(reqId));
@@ -35,6 +41,8 @@ export function ReqActionsMenu({ reqId, title, status }: { reqId: string; title:
         <>
           {isPending && <button className="rowmenu-item" role="menuitem" onClick={() => { close(); run(() => decideReqAction(reqId, true)); }}>Approve</button>}
           {isPending && <button className="rowmenu-item" role="menuitem" onClick={() => { close(); run(() => decideReqAction(reqId, false)); }}>Reject</button>}
+          {isOpen && <button className="rowmenu-item" role="menuitem" onClick={() => { close(); copyLink(); }}>Copy public link</button>}
+          {isOpen && <button className="rowmenu-item" role="menuitem" onClick={() => { close(); openLink(); }}>View public page</button>}
           {isOpen && <button className="rowmenu-item" role="menuitem" onClick={() => { close(); shareLinkedIn(); }}>Share on LinkedIn</button>}
           {canClose && <button className="rowmenu-item" role="menuitem" onClick={() => { close(); run(() => closeReqAction(reqId)); }}>Close requisition</button>}
           <button className="rowmenu-item danger" role="menuitem" onClick={() => { close(); del(); }}>Delete requisition</button>
