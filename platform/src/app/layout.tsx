@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { ClerkProvider, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 import { SideNav } from "./sidenav";
 import { Assistant } from "./people/assistant";
@@ -32,6 +33,17 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // Public careers pages render fully standalone — no app shell, sidebar, role
+  // switcher, AI assistant, or Clerk — even if the viewer happens to be signed in.
+  const pathname = headers().get("x-pathname") ?? "";
+  if (pathname.startsWith("/jobs")) {
+    return (
+      <html lang="en">
+        <body><div className="auth-shell">{children}</div></body>
+      </html>
+    );
+  }
+
   // Resolve role + company + inbox count (all fail gracefully when signed out).
   let role: string | null = null;
   let canViewAs = false;
