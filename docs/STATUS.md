@@ -10,6 +10,7 @@ _Last updated: 2026-07-29._
 - **Legal**: draft DPDP-aligned Privacy Policy + DPA + Terms (`legal/`), live at `nayahr.in/{privacy,terms,dpa}` (noindex draft) + footer links + branded PDFs. `npm run legal:build` regenerates. **Pending lawyer review.**
 - **Clients**: company-name onboarding prompt + `name_confirmed`; `npm run clients:list`; in-app **super-admin console** `/admin` (gated by `SUPERADMIN_EMAILS`, via `SECURITY DEFINER`). Migrations 0021–0022.
 - **Performance/latency**: nav now uses `next/link` (no full-page reloads); app functions pinned to **Mumbai `bom1`** (`platform/vercel.json`); trimmed per-request layout work (super-admin folded into `getSession`, `getCompany` 2→1 query, parallelized); `withSession` sets the 3 RLS GUCs in one round-trip; profile page dedupes `listPeople` + parallel fetches. Tab switches much faster.
+- **SEO (marketing site)**: `robots.txt`, `sitemap.xml`, schema.org JSON-LD (Organization/WebSite/SoftwareApplication), meta (`og:locale en_IN`, robots, keywords). **Canonical fixed to apex** — `nayahr.in` now serves directly, `www` 308→apex (was reversed). **Google Search Console** verified (HTML tag), sitemap submitted (**Success**), homepage indexing requested. Now a waiting game — new domain takes days–weeks to index; monitor GSC Pages/Performance.
 
 ## 🔜 Next initiative
 - **PWA (mobile app)** — Phase 1: responsive + installable, employee self-service first. Plan: `docs/PWA-PLAN.md`. Not started.
@@ -17,6 +18,8 @@ _Last updated: 2026-07-29._
 ## 🐢 Follow-ups / known optimizations
 - **Profile page (`/people/[id]`) worker-scoped queries.** It still fetches whole-tenant leave/comp/performance then filters to one worker — fine for small tenants, wasteful at scale. Rewrite `getWorkerDetail` (+ repo variants) to fetch only the target worker's data. Do once clients get larger. _(Biggest remaining single-page latency after Neon Mumbai.)_
 - **Neon → Mumbai migration is the biggest latency lever** (see Blocked). Functions are already in Mumbai; co-locating the DB turns ~40ms round-trips into ~2ms and speeds every page (profile page most).
+- **SEO — Google Jobs (JobPosting schema).** Make the public careers pages (`app.nayahr.in/jobs/[id]`) indexable + add `JobPosting` structured data → eligibility for Google Jobs. High-value, on-brand SEO channel for an HRIS with a built-in careers page. (Currently `noindex`.)
+- **SEO — ongoing (user).** New domain: monitor GSC Pages/Performance over weeks; build inbound links (LinkedIn company page, directories); add keyword-targeted content pages over time. Consider a GSC **Domain property** (`nayahr.in`, DNS TXT) to consolidate the www/apex/app properties.
 - **Staging environment.** Today `main` deploys **straight to production** (no pre-prod gate). Add a `staging.nayahr.in` Vercel deploy on a `staging` branch pointed at a **separate Neon branch/DB**, so changes bake before hitting real clients. Worth it once there are paying clients who'd be affected by a bad deploy. Would need: a staging branch + Vercel env (staging `APP_DATABASE_URL`/`DATABASE_URL`, Clerk keys, `APP_URL`) + a promote-to-prod flow.
 
 ## ⛔ Blocked on the user (business/infra, not code)
